@@ -1,8 +1,12 @@
 using Pkg
-pkg"add src/FestaetalLib"
-pkg"add src/Pyramids"
-pkg"add src/FestaetalAnalytic"
-pkg"precompile"
+pkg"dev src/FestaetalLib"
+# pkg"add src/FestaetalAnalytic"
 
-# and test it
+pkg"add Images, ImageMagick"
+pkg"add Serialization, MAT, DataFrames, DataFramesMeta,Dates,Revise"
+pkg"add Plots,NamedColors"
+pkg"add Statistics, StatsBase, LinearAlgebra , Bootstrap"
+pkg"precompile"
+@info "Now testing some dependencies..."
 pkg"test FestaetalLib"
+@info "All done!"

@@ -27,11 +27,11 @@ path_img : folder containing the natural images needed train the model
 path_stan_home : installation folder for cmdstan 
 
 
-If you experience problems, rune the interactive script `set_paths.jl` in Julia.
+If you experience problems, run the interactive script `set_paths.jl` in Julia.
 
 ### Installing internal dependencies
 
-To load the code libraries and all package dependency, run the script `install_dependencies.jl` from the home folder of the project.
+To load the code libraries and all package dependency, run   the script `install_dependencies.jl` from the home folder of the project.
 
 ## Producing the figures
 
@@ -55,6 +55,4 @@ To inspect the code and modify its parameters it is reccomended to open the scri
 
 <p xmlns:dct="http://purl.org/dc/terms/" xmlns:cc="http://creativecommons.org/ns#" class="license-text"><a rel="cc:attributionURL" property="dct:title" href="https://github.com/rubencoencagli/festa-et-al-2020">Code for "Neuronal variability reflects probabilistic inference tuned to natural image statistics"</a> by <span property="cc:attributionName">Festa, Aschner, Davila, Kohn and Coen-Cagli</span> is licensed under <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1" /><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1" /><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1" /></a></p>
 
-
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
