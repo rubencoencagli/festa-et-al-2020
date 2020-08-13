@@ -1,2 +1,10 @@
 *.json
 *.JLD2
+*.jpg
+*.JPG
+*.png
+*.mat
+*.jls
+tmp/
+.directory
+Manifest.toml

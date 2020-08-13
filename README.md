@@ -24,7 +24,7 @@ The code is multi-platform, provided that the follwing two requirements are fulf
 >Please customize local_paths.json with the corresponding paths on your system
 path_exp : folder containing experimental data
 path_img : folder containing the natural images needed train the model
-path_stan_home : installation folder for cmdstan 
+path_stan_home : installation folder for cmdstan
 
 
 If you experience problems, run the interactive script `set_paths.jl` in Julia.
@@ -41,11 +41,9 @@ Figures are then saved in the `plots` folder, created in the home directory of t
 
  Note that training a GSM model may require 15 to 30 minutes (the code is not optimized for speed). Therefore, by default, the trained model is saved on disk, and chached. If you change the GSM parameters and you require a new training you can either:
 
-+ Remove the chached files, contained in `src/tmp/trained_gsm`
++ Remove the chached files, contained in `src/tmp`
 + Call the script with the `--rebuildGSM` option, for example:  
    `julia figX.jl --rebuildGSM` .
-
-Numerical sampling on Stan may also require a long time, the corresponding directory for temporary data is `src/tmp/sampled_gsm` and the corresponding option is `--resampleGSM` .
 
 ## Inspecting the code
 

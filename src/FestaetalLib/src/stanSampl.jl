@@ -3,6 +3,17 @@ Here I use Stan to find the posterior of the
 GSM given data, code adapted from Abhi
 =#
 
+
+global stan_folder = ""
+
+function set_stan_folder(folder)
+  @assert isdir(folder) "$folder is not a valid directory"
+  global stan_folder=folder
+  set_cmdstan_home!(folder)
+end
+
+
+
 # N are the number of filters*2 , i.e. the filter output dimension
 # M are the datapoints (image patches)
 # warning: this code will get progressively worse as noise becomes smaller!
@@ -143,13 +154,6 @@ function sample_gs(gsm::GSM,xs::AbstractArray,vs::Matrix{Float64})
     gs
 end
 
-global stan_folder = ""
-
-function set_stan_folder(folder)
-  @assert isdir(folder) "$folder is not a valid directory"
-  global stan_folder=folder
-  set_cmdstan_home!(folder)
-end
 
 """
     sample_posterior(gsm::GSM{RayleighMixer},X::Matrix, n_samples ;
@@ -218,7 +222,6 @@ function sample_posterior_fast(gsm::GSM{RayleighMixer},X, n_samples ;
             pdir=joinpath(@__DIR__(),"../other/StanTmp"),
             nchains=4,
             nwarmup=1000 )
-    @assert !isempty(stan_folder) "Please set the folder of cmdstan using set_stan_folder"
     println("the following temporary directory will be used" * pdir)
     dim = size(X,1)
     isonedim = dim == 1

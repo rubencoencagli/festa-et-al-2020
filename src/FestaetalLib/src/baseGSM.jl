@@ -1,8 +1,18 @@
-
 #=
 GSM model constructor and utilities
 
 =#
+
+"""
+    make_noise_images(size,n_images)
+
+Generates `n_images` matrices of size `(size,size)` of random values between 0 and 1
+"""
+function make_noise_images(size,n_images)
+    [ rand(size,size) for i in 1:n_images] # uniform sampling, 0 to 1
+end
+
+
 
 abstract type MixerType end
 struct RayleighMixer <: MixerType
@@ -106,37 +116,6 @@ function make_rand_cov_mat( dims::Integer , diag_val::Real , (k_dims::Integer)=5
   S
 end
 
-# """
-#     function GSM(natural_images::Vector, bank::OnePyrBank , noise_scal, ray_alpha ;
-#       (xpost::XPostProcess)=Xstd(1.0) ,
-#       (xsamples::I)=10_000,
-#       (noise_samples::I)=1500,
-#       (sample_size::I) = 50) where I<:Integer
-#
-# Generates a GSM model starting from an array of natural images. The images are cut in
-# smaller patches and sampled to obtain the filter outputs, that are then used to
-# infer the covariance matrix by maximul likelihood.
-# The parameter `ray_alpha` defines the mixer prior distribution. `noise_scal` defines
-# how large is the noise covariance matrix (becomes the std of the data used for
-# the noise cov matrix estimate)
-# """
-# # Build GSM from natural images, uses a lot of elements from nturalRead and steerPyramids
-# function GSM(natural_images::Vector, bank::OnePyrBank , noise_scal, ray_alpha ;
-#     (xpost::XPostProcess)=Xstd(1.0) ,
-#     (xsamples::I)=10_000,
-#     (noise_samples::I)=1500,
-#     (sample_size::I) = 50,
-#     verbose=false) where I<:Integer
-#   # println("Sampling random noise to infer the noise covariance matrix...")
-#   noise_cov = get_covariance_noise(noise_samples,sample_size,bank;
-#           verbose=verbose)
-#   # println("Done! Sampling natural images, to build the convariance matrix...")
-#   x_nat =  apply_bank(xsamples,natural_images,sample_size,bank,xpost,verbose)
-#   # println("Done! Building the GSM model")
-#   GSM_from_data(x_nat,noise_cov,RayleighMixer(ray_alpha))
-# end
-#
-
 """
     function get_samples(gsm::GSM{M}, nsamples) where M<:RayleighMixer
 
@@ -222,7 +201,7 @@ mutable struct GSM_Model
   nsurround::Integer # 4 or 8
   bank::OnePyrBank
   #
-  noise_level
+  noise_level::Real
   x_natural::Matrix
   gsm::GSM
   #

@@ -1,7 +1,7 @@
 
 # JSON package needed
 using Pkg
-try 
+try
     @eval using JSON
 catch e
     pkg"add JSON"
@@ -18,10 +18,10 @@ function warnpath(path)
     if !isdir(path)
         @error("\nDirectory $path not found! Is it the correct path?"*
           "\n If not, please run this script again with the correct path")
-        println()  
+        println()
     end
     return nothing
-end 
+end
 
 function get_path(prompt::String,default::String)
     println(prompt * " (default is: $default)")
@@ -34,20 +34,21 @@ end
 get_path(pd::Tuple)=get_path(pd[1],pd[2])
 
 
-path_img, path_exp, path_stan_home = map(get_path, 
-    zip( [ "Select folder for natural images",
-            "Select folder for experimental data", 
-            "Select home folder of cmdstan installation"], 
+path_img, path_exp, path_stan_home = map(get_path,
+    zip( [ "Select directory for natural images",
+            "Select directory for experimental data",
+            "Select home directory of cmdstan installation"],
          [path_img_default, path_exp_default,path_stan_default]) )
 
 
-sav_dict = Dict( "path_img"=> path_img, 
-                  "path_exp" => path_exp, 
-                  "path_stan_home"=>path_stan_home)
+sav_dict = Dict( "dir_img"=> path_img,
+                  "dir_exp" => path_exp,
+                  "dir_stan_home"=>path_stan_home)
 
-sav_local_paths= joinpath(this_dir,"local_paths.json")
-open(sav_local_paths,"w") do f
+sav_folder=mkpath(joinpath(this_dir,"data"))
+sav_file= joinpath(sav_folder,"local_dirs.json")
+open(sav_file,"w") do f
     write(f,JSON.json(sav_dict))
 end
 
-@info("\nPath information saved in $sav_local_paths\n All done!")
+@info("\nPath information saved in $sav_file\n All done!")

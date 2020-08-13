@@ -3,16 +3,6 @@ Produces image patches made of gratings
 =#
 
 
-"""
-    make_noise_images(size,n_images)
-
-Generates `n_images` matrices of size `(size,size)` of random values between 0 and 1    
-"""
-function make_noise_images(size,n_images)
-    [ rand(size,size) for i in 1:n_images] # uniform sampling, 0 to 1
-end
-
-
 # this controls phase orientation,global patch size.
 """
         struct GratingParams
@@ -164,4 +154,86 @@ function pixel_shift(img,k=1,zero=0.0)
       filler = fill(zero,(1,nc))
       rand(Bool) ? (return vcat(img[1+k:end,:],filler)) : return vcat(filler,img[1:end-k,:])
   end
+end
+
+
+# functions below are higher level
+
+function make_areasumm_stimulus(imgs_input,model_sizes, grey_val,shift_val=0.0)
+  x_img = shift_val
+  y_img = shift_val
+  nsizes =  length(model_sizes)
+  nimg = length(imgs_input)
+  nviews = nsizes*nimg
+  idx = collect(1:nviews)
+  sizes = repeat(model_sizes ; outer=nimg)
+  images = repeat(1:nimg ; inner=nsizes)
+  views = [deepcopy(imgs_input[i]) for i in images]
+  views = map(zip(views,sizes)) do (v,r)
+      cut_outside!(v,r;zero=grey_val, x_rel=x_img,y_rel=y_img)
+  end
+  return DataFrame(
+    idx=idx, img_idx=images,
+    size=sizes , view = views )
+end
+
+
+
+function make_stimuli_disk(size_patch, sizes, stim_ori, freqs, phases,
+      stim_contrast, center_shifts ; contrast_base=3.0)
+  df_ret = DataFrame(idx=Int64[],
+      cshift=Float64[],
+      sfreq=Float64[],
+      sphase=Float64[],
+      contrast=Float64[],
+      size = Int64[],
+      ori = Float64[],
+      view = Matrix{Float64}[] )
+  idx = 0
+  for sh in center_shifts,
+      freq in freqs,
+      phase in phases,
+      contr in stim_contrast ,
+      ori in stim_ori,
+      sz in sizes # do
+    idx += 1
+    grat_pars = GratingParams(size=size_patch, ori=ori,frequency=freq,
+                contrast = contrast_base, noise_std=0.0 , phase=phase )
+    view = gratings_enlarging_center([sz],grat_pars;rel_center=(sh,sh))[1]
+    view .*= contr
+    push!(df_ret,[idx sh freq phase contr sz ori [view]])
+  end
+  df_ret
+end
+
+function make_stimuli_surrori(size_patch::Integer, rad_small, rad_large_start,
+    rad_large_end , oris_surr, stim_freq, stim_phase,
+    stim_contrast, center_shifts ; contrast_base=3.0)
+  df_ret = DataFrame(idx=Int64[],
+      cshift=Float64[],
+      sfreq=Float64[],
+      sphase=Float64[],
+      contrast=Float64[],
+      rad_small = Int64[],
+      rad_large_start = Int64[],
+      rad_large_end = Int64[],
+      sori = Float64[],
+      view = Matrix{Float64}[] )
+  idx = 0
+  for sh in center_shifts,
+      contr in stim_contrast ,
+      r_small in rad_small,
+      r_large_st in rad_large_start ,
+      r_large_en in rad_large_end ,
+      ori in oris_surr # do ...
+    idx += 1
+    grat_pars = GratingParams(size=size_patch, ori=0.0,frequency=stim_freq,
+                phase=stim_phase,
+                contrast = contrast_base, noise_std=0.0)
+    view = gratings_surround_polarization(r_small,r_large_st,
+        r_large_en,ori,grat_pars ; rel_center=(sh,sh))[1]
+    view .*= contr
+    push!(df_ret,[idx sh stim_freq stim_phase contr r_small r_large_st r_large_en ori  [view]])
+  end
+  df_ret
 end

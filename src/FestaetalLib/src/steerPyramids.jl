@@ -138,7 +138,7 @@ function invert_test_cs(img_size::Integer,pbank::OnePyrBank ; real_part=true)
 end
 
 function get_pyramid(img::AbstractArray{<:Real},p::PyramidPars)
-    ImagePyramid(img, ComplexSteerablePyramid(),  scale=p.scale,
+    Pyramids.ImagePyramid(img, Pyramids.ComplexSteerablePyramid(),  scale=p.scale,
         max_levels=p.max_levels,twidth=p.twidth,num_orientations=p.oris_total)
 end
 get_pyramid(img::AbstractArray{<:Real},pb::OnePyrBank)=get_pyramid(img,pb.pyrpars)
@@ -158,7 +158,7 @@ function apply_bank(pyr::Pyramids.ImagePyramid,
     out = Vector{Float64}(undef,2n_filt)
     for i in 1:n_filt
       (level,ori,x,y) = pyrbank.coords[i] # parameters of single filter
-      img_pyr = subband(pyr,level)[ori] # extract corresponding pyramid band
+      img_pyr = Pyramids.subband(pyr,level)[ori] # extract corresponding pyramid band
       img_pyrc = centered(img_pyr,i0,j0) # coordinates relative to x0, y0
       cval = img_pyrc[y,x] # inversion columns rows here!
       out[2i-1] = real(cval)
