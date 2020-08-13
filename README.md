@@ -16,20 +16,23 @@ The code is multi-platform, provided that the follwing two requirements are fulf
 + [Julia 1.4](https://julialang.org/) (or newer)
 + [cmd-stan 2.22](https://mc-stan.org/users/interfaces/cmdstan) (or newer)
 
+Please note that `cmd-stan` must be compiled after being downloaded. Refer to the installation instructions on the website.
+
 ### Importing the data
 
 > :warning: **TO-DO**
 
+1. :warning: TODO  import the data files from figshare/osf/zenodo :sweat:  . If you wish to use the default paths, simply copy it to the `data` folder in the project directory.
+2. Run `set_dirs.jl` with Julia, add the directory paths when prompted. The directory paths are stored in the file `data/local_dirs.json`. You can also modify that file directly to indicate the data directories, as follows:
+```json
+{
+  "dir_exp":"<directory containing experimental data>",
+  "dir_img":"<directory containing natural images>",
+  "dir_stan_home":"<home directory of cmd-stan installation>"
+}
+```
 
->Please customize local_paths.json with the corresponding paths on your system
-path_exp : folder containing experimental data
-path_img : folder containing the natural images needed train the model
-path_stan_home : installation folder for cmdstan
-
-
-If you experience problems, run the interactive script `set_paths.jl` in Julia.
-
-### Installing internal dependencies
+### Internal dependencies
 
 To load the code libraries and all package dependency, run   the script `install_dependencies.jl` from the home folder of the project.
 
