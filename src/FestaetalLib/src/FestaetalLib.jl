@@ -2,29 +2,33 @@
 
 
 module FestaetalLib
-  export Pyramids
 
+# load module that computes complex steerable pyramids
 pyramidsmodule = abspath(@__DIR__,"..","..","Pyramids","src","Pyramids.jl")
 @assert isfile(pyramidsmodule) "file $pyramidsmodule not found"
 include(pyramidsmodule)
 
+# load all other library dependencies
+using Dates,Formatting
 using Statistics, LinearAlgebra, StatsBase
 using Distributions, Random
 
-using OffsetArrays
-using Images
+using Images,OffsetArrays
 
 using CmdStan,MCMCChains
-using Serialization,JSON,MAT  # For input and output
-using DataFrames,DataFramesMeta # better storage
-using Bootstrap
+
+using Serialization,JSON,MAT# For input and output
+using DataFrames,DataFramesMeta
+
+using SmoothingSplines # smoothing PSTH curves
+using HypothesisTests,Bootstrap # confidence intervals and significance
 
 using EponymTuples
 
-using Dates
+# write date as string
 date2str() = Dates.format(now(),"yyyymmdd")
 
-# file with paths should be here
+# file with paths should be in the folder...
 const dir_dirfile = abspath(@__DIR__,"..","..","..","data")
 const dir_tmpstuff = abspath(@__DIR__,"..","..","tmp")
 const dir_plots = abspath(@__DIR__,"..","..","..","plots")
@@ -229,6 +233,17 @@ function extract_neural_response(gsm_obj,alph)
 end
 
 
+
+function fanofactor(spk::AbstractVector{R}; warn::Bool=true) where R<:Real
+  μ,σ² = mean_and_var(spk)
+  if μ == 0
+    @warn "Mean spike count is 0, the Fano factor does not have a meaningful value."
+    return 0.0
+  end
+  return σ²/μ
+end
+
+
 # Bootstrap functions
 
 getdeltaerror(x, down,up) = (x-down, up-x)
@@ -245,16 +260,38 @@ function mean_boot(spk::AbstractVector{T} ;
     retnames = Symbol.( [prefix*nm for nm in ("","_cidown","_ciup","_ddown","_dup")] )
     return (; zip(retnames, [mean,mean_cidown,mean_ciup,mean_ddown,mean_dup])...)
 end
+function var_boot(spk::AbstractVector{T} ;
+          nrun = 5_000 , conf = 0.95, prefix="var") where T <: Real
+    _varboot = bootstrap(Statistics.var, spk, BasicSampling(nrun))
+    var, var_cidown, var_ciup = confint(_varboot, BCaConfInt(conf))[1]
+    var_ddown,var_dup = spitdeltaerror.(var, var_cidown, var_ciup)
+    retnames = Symbol.( [prefix*nm for nm in ("","_cidown","_ciup","_ddown","_dup")] )
+    return (; zip(retnames, [var,var_cidown,var_ciup,var_ddown,var_dup])...)
+end
+function ff_boot(spk::AbstractVector{T} ;
+          nrun = 5_000 , conf = 0.95, prefix="ff") where T <: Real
+    _ffboot = bootstrap(fanofactor, spk, BasicSampling(nrun))
+    ff, ff_cidown, ff_ciup = confint(_ffboot, BCaConfInt(conf))[1]
+    ff_ddown,ff_dup = spitdeltaerror.(ff, ff_cidown, ff_ciup)
+    retnames = Symbol.( [prefix*nm for nm in ("","_cidown","_ciup","_ddown","_dup")] )
+    return (; zip(retnames, [ff,ff_cidown,ff_ciup,ff_ddown,ff_dup])...)
+end
 function geomean_boot(spk::AbstractVector{T} ;
         nrun = 5_000 , conf = 0.95,prefix="geomean") where T <: Real
     _meanbs = bootstrap(StatsBase.geomean, spk, BasicSampling(nrun))
     geomean, geomean_cidown, geomean_ciup = confint(_meanbs, BCaConfInt(conf))[1]
-    geomean_ddown,geomean_dup = getdeltaerror.(geomean, geomean_cidown, geomean_ciup)
+    geomean_ddown,geomean_dup = spitdeltaerror.(geomean, geomean_cidown, geomean_ciup)
     retnames = Symbol.( [prefix*nm for nm in ("","_cidown","_ciup","_ddown","_dup")] )
     return (; zip(retnames, [geomean,geomean_cidown,geomean_ciup,
         geomean_ddown,geomean_dup])...)
 end
-
+function median_boot(v::AbstractVector{T} ; nrun=5_000 , conf=0.95) where T<:Real
+  bs_median = bootstrap(Statistics.median,v,BasicSampling(nrun))
+  median,median_cidown,median_ciup =
+          confint(bs_median,BCaConfInt(conf))[1]
+  median_ddown,median_dup = spitdeltaerror.(median, median_cidown, median_ciup)
+  return @eponymtuple(median,median_ciup,median_cidown,  median_ddown,median_dup )
+end
 
 
 
@@ -269,7 +306,7 @@ function extract_mean_ff_bysize(gsm_obj,r_alpha)
   transform!(data, :gs => ByRow(g->  g_to_r(g,conv)) => :rs )
   # add mean spike counts and FFs
   transform!(data, [:rs => ByRow(mean)  => :spk_mean ,
-      :rs => ByRow(rs -> var(rs)/mean(rs))   => :spk_ff] )
+      :rs => ByRow(fanofactor)   => :spk_ff] )
   # normalize by spike count at RF size (i.e. max over sizes)
   dat_byimg = groupby(data,:img_idx;sort=true)
   transform!(dat_byimg, :spk_mean => (spkmeans -> spkmeans./maximum(spkmeans)) =>
@@ -347,7 +384,7 @@ function extract_mean_ff_surrori(gsm_obj,r_alpha; symmetrize=false)
   transform!(data, :gs => ByRow(g->g_to_r(g,conv)) => :rs )
   # add mean spike counts and FFs
   transform!(data, [:rs => ByRow(mean) => :spk_mean ,
-      :rs => ByRow(rs -> var(rs)/mean(rs)) => :spk_ff] )
+      :rs => ByRow(fanofactor) => :spk_ff] )
   # normalize by response without surround (a single scalar)
   spk_mean_nosurr = mean(@where(data,ismissing.(:sori)).spk_mean)
   transform!(data, :spk_mean => (spkmeans -> spkmeans./spk_mean_nosurr) =>
@@ -388,4 +425,16 @@ function symmetrize!(y::AbstractVector,x::AbstractVector)
   end
   return nothing
 end
+
+## Below , the part used for data analysis
+
+
+include("data_analysis_base.jl")
+include("data_analysis_crcns_pvc8.jl")
+include("data_analysis_filters.jl")
+
+
+
+
+
 end # module

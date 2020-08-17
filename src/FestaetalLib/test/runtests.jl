@@ -1,6 +1,6 @@
 using Test
 using FestaetalLib ; const F=FestaetalLib
-const P = Pyramids
+const P = FestaetalLib.Pyramids
 
 # code from Pyramids/test/runtests.jl
 function end_to_end(test_im, T)

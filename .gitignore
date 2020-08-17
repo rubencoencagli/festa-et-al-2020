@@ -8,3 +8,4 @@
 tmp/
 .directory
 Manifest.toml
+data/experiments
