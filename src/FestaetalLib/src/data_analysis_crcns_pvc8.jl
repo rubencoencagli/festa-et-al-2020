@@ -6,7 +6,7 @@ function make_dfviews_pvc8()
   # natural images parameters
   idx_matnat = collect(1:540)
   nimg = div(540,2)
-  sizes_deg = collect(2 .^(-1.56:.7:2.64))
+  sizes_deg = standard_sizes # defined in data_analysis_base.jl
   size_nat50, size_nat150  = sizes_deg[[3,6]]
   sizes_nat = repeat([size_nat50,size_nat150] ; outer=nimg )
   natimgs = repeat(1:nimg ; inner=2)

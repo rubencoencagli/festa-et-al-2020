@@ -60,7 +60,6 @@ function _filter_data(df,p::MinMeanCount)
   return  df_to_keep!(df)
 end
 
-
 struct AverageFFLower <: DataFilter
   ff_min::Real
 end
@@ -79,22 +78,60 @@ function _filter_data(df,p::NSeriesMin)
   return  df_to_keep!(df)
 end
 
+struct ByRFSizes <: DataFilter
+  idx_rf_good
+end
+function _filter_data(df,p::ByRFSizes)
+  function f_keep(spikecounts,sizes)
+    (_,is_rf,_)  = get_idx_rf_and_large(spikecounts,sizes)
+    return (findfirst(is_rf) in p.idx_rf_good)
+  end
+  sort!(df,vcat(serselector,:size))
+  transform!(groupbyseries(df),
+    [:spk_mean,:size] => f_keep => :to_keep)
+  return  df_to_keep!(df)
+end
 
+struct NoNatGap <: DataFilter end
+function _filter_data(df,p::NoNatGap)
+  filter!(:hasgap => (g -> !g) , df)
+  return df
+end
+
+struct SurroundSuppression <: DataFilter
+  suppr::Float64
+end
+function _filter_data(df,p::SurroundSuppression)
+  function f_keep(mus,sizes)
+    (_,is_rf,is_lg)  = get_idx_rf_and_large(mus,sizes)
+    rf = mus[findfirst(is_rf)]
+    lg = mus[findfirst(is_lg)]
+    return 2(rf-lg)/(rf+lg) >= p.suppr
+  end
+  sort!(df,vcat(serselector,:size))
+  transform!(groupbyseries(df),
+    [:spk_mean,:size] => f_keep => :to_keep)
+  return  df_to_keep!(df)
+end
+
+# function filter_data(dfs, p::SurroundSuppression)
+#   serselector = vcat(neuselector,:series)
+#   dffilt = combine(groupby(dfs,serselector)) do df
+#     (_, is_rf,is_large) = _rf_and_large_sizes(df.spk_mean,df.size,false)
+#     DataFrame(keep=keep)
+#   end
+#   dffilt = dffilt[dffilt.keep,:]
+#   return join(dfs,dffilt ; on=serselector, kind=:semi)
+# end
 
 struct Mean4Views <: DataFilter
   m
   idx_views
 end
 
-struct SurroundSuppression <: DataFilter
-  supp::Float64
-end
-struct NotRF <: DataFilter
-  noidx
-end
-struct ByRFSizes <: DataFilter
-  yesidx
-end
+# struct NotRF <: DataFilter
+#   noidx
+# end
 struct SmallImageVsBaseline <: DataFilter
   baseline_data
   spk_deltat
@@ -114,18 +151,6 @@ end
 # end
 #
 #
-# function filter_data(dfs, p::SurroundSuppression)
-#   serselector = vcat(neuselector,:series)
-#   dffilt = combine(groupby(dfs,serselector)) do df
-#     (_, is_rf,is_large) = _rf_and_large_sizes(df.spk_mean,df.size,false)
-#     rf = df.spk_mean[is_rf][1]
-#     lg =  df.spk_mean[is_large][1]
-#     keep =  2(rf-lg)/(rf+lg) > p.supp
-#     DataFrame(keep=keep)
-#   end
-#   dffilt = dffilt[dffilt.keep,:]
-#   return join(dfs,dffilt ; on=serselector, kind=:semi)
-# end
 # function filter_data(dfs, p::NotRF)
 #   serselector = vcat(neuselector,:series)
 #   sizes = sort(unique(dfs.size))

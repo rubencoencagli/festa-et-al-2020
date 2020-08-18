@@ -1,7 +1,6 @@
 using FestaetalLib; const F=FestaetalLib
 using Plots, NamedColors
 using Serialization
-using Dates ; date2str() = Dates.format(now(),"yyyymmdd")
 using Statistics
 using DataFrames, DataFramesMeta
 using EponymTuples
@@ -53,14 +52,9 @@ data_spikecounts = let dat=dataspikes ,
   sort!(ret,F.neuselector)
 end
 
-
 # define series using secondary features
-# check again the score over the series
-# (because spike counts have been re-computed based on latency)
-data_spikecounts_series = let dat=data_spikecounts,
-    df =  F. define_series(data_spikecounts; secondary_features=secondary_features)
-    sort!(df,vcat(F.neuselector,:series))
-end
+data_spikecounts_series = F. define_series(data_spikecounts;
+      secondary_features=secondary_features)
 ##
 
 data_series_filt = F.filter_data(data_spikecounts_series, data_filters...)

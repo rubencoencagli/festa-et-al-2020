@@ -27,6 +27,10 @@ mutable struct SpikingData
   times::Vector{Float64}
 end
 
+
+const standard_sizes = collect(2 .^(-1.56:.7:2.64))
+standardize_size(s) = standard_sizes[argmin(abs.(s .- standard_sizes))]
+
 # general utility functions
 
 spitp(a,b) = pvalue(OneSampleTTest(a,b); tail=:right)
@@ -44,42 +48,42 @@ p_perc(a,b) = spitp(score_perc.(a,b))
 round2(x)=round(x;sigdigits=2)
 round3(x)=round(x;sigdigits=3)
 
-function ntup2df(ntup)
-  df=DataFrame()
-  for (k,v) in pairs(ntup)
-    df[!,k] = [v]
-  end
-  return df
-end
+# function ntup2df(ntup)
+#   df=DataFrame()
+#   for (k,v) in pairs(ntup)
+#     df[!,k] = [v]
+#   end
+#   return df
+# end
 
-function matrix_to_dataframe(matrix, cols_tuple , spikenames=:spikes ;
-     verbose=true)
-    cols = values(cols_tuple)
-    @assert length(cols) == ndims(matrix) "number of parameter values wrong!"
-    szmat = size(matrix)
-    ntrials=szmat[end]
-    @assert begin
-        a = [ length(c) == d for (c,d) in zip(cols,szmat[1:end-1]) ]
-        all(a)
-    end "wrong column sizes!"
-    dfret = DataFrame()
-    ktot = length(cols_tuple)
-    for (k,(key,col)) in enumerate(pairs(cols_tuple))
-        if verbose
-            @info "building data column $k of $ktot ... "
-        end
-        _sz = [szmat...]
-        _szre = copy(_sz)
-        _szre[Not(k)] .= 1
-        _c = reshape(col,Tuple(_szre))
-        _sz[k]=1
-        _mat  = repeat(_c; outer=_sz)
-        dfret[!,key] = _mat[:]
-    end
-    if verbose ; @info "Adding the data !" ; end
-    dfret[!,spikenames] = matrix[:]
-    return dfret
-end
+# function matrix_to_dataframe(matrix, cols_tuple , spikenames=:spikes ;
+#      verbose=true)
+#     cols = values(cols_tuple)
+#     @assert length(cols) == ndims(matrix) "number of parameter values wrong!"
+#     szmat = size(matrix)
+#     ntrials=szmat[end]
+#     @assert begin
+#         a = [ length(c) == d for (c,d) in zip(cols,szmat[1:end-1]) ]
+#         all(a)
+#     end "wrong column sizes!"
+#     dfret = DataFrame()
+#     ktot = length(cols_tuple)
+#     for (k,(key,col)) in enumerate(pairs(cols_tuple))
+#         if verbose
+#             @info "building data column $k of $ktot ... "
+#         end
+#         _sz = [szmat...]
+#         _szre = copy(_sz)
+#         _szre[Not(k)] .= 1
+#         _c = reshape(col,Tuple(_szre))
+#         _sz[k]=1
+#         _mat  = repeat(_c; outer=_sz)
+#         dfret[!,key] = _mat[:]
+#     end
+#     if verbose ; @info "Adding the data !" ; end
+#     dfret[!,spikenames] = matrix[:]
+#     return dfret
+# end
 
 """
         matrix_bin_vects(mat::AbstractArray)
@@ -187,14 +191,7 @@ groupbyseries(df::AbstractDataFrame) = groupby(df,serselector;sort=true)
 
 nneus(df) = length(groupby(df,neuselector))
 nseries(df) = length(groupbyseries(df))
-
-function n_neus_series(df)
-    nneus(df)
- serselector = vcat(neuselector,:series)
- dfs =unique(select(df,serselector))
- dfn = dfneus(dfs)
- return nrow.([dfn,dfs])
-end
+n_neus_series(df) = (nneus(df), nseries(df))
 
 # reading spike train
 
@@ -206,6 +203,38 @@ function spikes_mean_and_var(spk::AbstractVector{B},idxs::B;
         counts = counts ./ nbins
     end
     return(mean_and_var(counts)..., counts)
+end
+
+
+function addemptycounts(dfdat)
+  # take all trials for a certain view and session
+  ret = combine(groupby(dfdat,:session)) do dfs
+    # pick all units in that session
+    dfneus = unique(select(dfs,[:electrode,:neuron]))
+    # for each trial in that session....
+    combine(groupby(dfs,[:view,:trial])) do df
+      df = select(df,Not([:session,:view,:trial]))
+      # merge all neurons with that trial
+      return rightjoin(df,dfneus; on=names(dfneus))
+    end
+  end
+  # create empty spike count
+  emptycount = fill!(similar(dfdat.spk[1]),false)
+  # add empty counts in all recorded trials
+  ret[!,:spk] = coalesce.(ret[!,:spk],Ref(emptycount))
+  return ret
+end
+
+# convert exact spike times to a binary vector where each element corresponds to a
+# small time interval . Having more than one spike is not allowed.
+function binarybinformat(dfdat,bins)
+  ret_counts = combine(groupby(dfdat, vcat(neuselector,[:view,:trial]) ; sort=true) ) do df
+    spk_t = df.spiketime
+    h=fit(Histogram,spk_t,bins).weights
+    @assert !any( h .> 1 )
+    ret = DataFrame( spk = [h .== 1] )
+  end
+  return addemptycounts(ret_counts)
 end
 
 
@@ -261,7 +290,7 @@ end
 function get_blank_and_window(sd,window_blank,window_stimulus)
   a = get_responses_window(sd,window_stimulus)
   b = get_spontaneus_rates(sd,window_blank)
-  return join(a,b ; on=intersect(names.([a,b])...))
+  return innerjoin(a,b ; on=intersect(names.([a,b])...))
 end
 
 
@@ -274,8 +303,10 @@ end
     get_idx_rf_and_large(spikecounts,sizes,isnatural;largerlarge=false)
 Returns:  (spk_rate_rel, is_rf,is_large)
 """
-function get_idx_rf_and_large(spikecounts,sizes)
+function get_idx_rf_and_large(spikecounts::AbstractVector{<:Real},
+            sizes::AbstractVector{<:Real})
   @assert issorted(sizes) "Please sort by size"
+  @assert length(spikecounts) == length(sizes) "inputs should have the same size"
   spk_max = maximum(spikecounts)
   spk_rate_rel = spikecounts ./ spk_max
   idx_rfsize,idx_lgsize = ( falses(length(sizes)) for _ in 1:2)
@@ -298,9 +329,12 @@ function get_views_included(sd::SpikingData ;
       kthresh = 1.0,  secondary_features=[:phase,:ori],
       window_stim = (50E-5,150E-3) , window_blank = (25E-3,75E-3) )
   resps = get_blank_and_window(sd,window_blank,window_stim)
-  # gratings
+  # size tuning
+  if !(:natimg in names(sd.views)) # if not defined, define it as missing
+      sd.views[!,:natimg] .= missing
+  end
   viewsgrat = filter(:natimg=>ismissing, sd.views)
-  grats_views = get_views_included_gratings(resps,viewsgrat ;
+  grats_views = get_views_included_sizetuning(resps,viewsgrat ;
         kthresh=kthresh, secondary_features=secondary_features)
   # natural img
   viewsnats = filter(:natimg=> i-> !ismissing(i), sd.views)
@@ -344,13 +378,14 @@ function test_views_included_with_rf(spk_mean,blank_mean,blank_var,k,sizes)
                 blank_mean[is_rf][1],blank_var[is_rf][1],k)
 end
 
-function get_views_included_gratings(resps::DataFrame, views::DataFrame; kthresh = 1.0,
+function get_views_included_sizetuning(resps::DataFrame, views::DataFrame; kthresh = 1.0,
      secondary_features = [:phase,:ori])
     isempty(views) && return DataFrame()
     nneuspre = nneus(resps)
     @assert nneuspre > 0
     serselector = vcat(neuselector, secondary_features)
     gratsresps=innerjoin(resps,views;on=:view)
+    sort!(gratsresps,vcat(serselector,:size) )
     # select rf size only
     dffilt=combine(groupby(gratsresps, serselector),
        AsTable([:spk_mean,:blank_mean,:blank_var,:size]) =>
@@ -385,7 +420,7 @@ end
 #   return nats_select
 # end
 #
-# function get_views_included_gratings_old(dfresps::DataFrame;
+# function get_views_included_sizetuning_old(dfresps::DataFrame;
 #       kthresh = 1.0, secondary_features=[:phase,:ori]  )
 #   nneus(df)= nrow(dfneus(df))
 #   nneuspre =nneus(dfresps)
@@ -420,7 +455,7 @@ end
 #   if nrow(viewsnats) == 0
 #     @warn "No natural images among the stimuli"
 #     respsgrat = join(resps,viewsgrat ; on=:view)
-#     grats_views = get_views_included_gratings_old(respsgrat ;
+#     grats_views = get_views_included_sizetuning_old(respsgrat ;
 #       kthresh=kthresh, secondary_features=secondary_features)
 #     ret = grats_views
 #   elseif nrow(viewsgrat) == 0
@@ -431,7 +466,7 @@ end
 #   else
 #     @warn "Both gratings and natural images among the stimuli"
 #     respsgrat = join(resps,viewsgrat ; on=:view)
-#     grats_views = get_views_included_gratings_old(respsgrat ;
+#     grats_views = get_views_included_sizetuning_old(respsgrat ;
 #           kthresh=kthresh, secondary_features=secondary_features)
 #     respsnats = join(resps,viewsnats ; on=:view)
 #     nats_views = get_views_included_natural_old(respsnats ; kthresh=kthresh)
@@ -441,39 +476,6 @@ end
 #   return  semijoin(resps,ret ; on=intersect(names.([ret,resps])...))
 # end
 #
-"""
-        define_series(data_spikecounts::DataFrame ; score_good=1.0,
-            secondary_features = [:natimg,:phase,:ori] )
-Secondary features define series, a series is kept if its best response is strong enough,
-and if all responses are > 0 . Get rid of orientation and phase, only series id is left.
-"""
-function define_series_old(data_spikecounts::DataFrame ; score_good=1.0,
-     secondary_features = [:natimg,:phase,:ori] )
-  nneus_initial =nneus(data_spikecounts)
-  serselector = vcat(neuselector,secondary_features)
-  # part 1, define series
-  # basically all except sizes
-  dfseries = combine(groupby(data_spikecounts, neuselector)) do __df
-    idx_series=0
-    combine(groupby(__df,serselector)) do df
-    # I keep it if best score is good enough (RF size)
-    # and if none of them is zero
-      keepit  = any(df.resp_score .>= score_good) && all(df.spk_mean .> 0)
-      if keepit
-        idx_series += 1
-        DataFrame(series = idx_series)
-      else
-        DataFrame(series = missing)
-      end
-    end
-  end
-  dropmissing!(dfseries, [:series])
-  ret =  innerjoin(data_spikecounts, dfseries ; on = serselector)
-   nneus_final = nneus(ret)
-   @info "After the selection by series, we have $nneus_final neurons"
-   @info " out of the previous $nneus_initial"
-   return ret
-end
 
 
 """
@@ -503,7 +505,7 @@ function define_series(df_spk::DataFrame ; secondary_features = [:natimg,:phase,
   After removing series that include null mean responses
   we have $nneus_final neurons (out of the previous $nneus_initial)
   """
-  return ret
+  return sort!(ret,vcat(neuselector,:series))
 end
 
 function average_over_series(data_spikecounts_series ; relative_rates=false)
@@ -547,7 +549,7 @@ function average_over_series_rel_old(data_spikecounts_series ; sizesnat = 2,size
     @assert ( (count(is_large) == 1) && (!isnat) ) || isnat
     DataFrame(size =df.size, spk_rate_rel = spk_rate_rel,is_rf=is_rf,is_large=is_large)
   end
-  retboth =join(ret,retrels ; on =_to_join)
+  retboth =innerjoin(ret,retrels ; on =_to_join)
   return retboth
 end
 

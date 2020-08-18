@@ -1,7 +1,6 @@
 using FestaetalLib; const F=FestaetalLib
 using Plots, NamedColors
 using Serialization
-using Dates ; date2str() = Dates.format(now(),"yyyymmdd")
 using Statistics
 using DataFrames, DataFramesMeta
 

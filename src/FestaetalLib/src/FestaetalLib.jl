@@ -2,6 +2,7 @@
 
 
 module FestaetalLib
+export date2str
 
 # load module that computes complex steerable pyramids
 pyramidsmodule = abspath(@__DIR__,"..","..","Pyramids","src","Pyramids.jl")
@@ -432,6 +433,7 @@ end
 include("data_analysis_base.jl")
 include("data_analysis_crcns_pvc8.jl")
 include("data_analysis_filters.jl")
+include("data_analysis_natural_sizetuning.jl")
 
 
 
