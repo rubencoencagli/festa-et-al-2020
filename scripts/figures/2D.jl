@@ -142,10 +142,8 @@ plt = let plt1=plot(
       color=colorant"darkblue",
     xlabel = "stim size (relative to RF)", ylabel = "Fano factor" ,xscale=:log10,
     leg=false)
-    plot(plt1,plt2; layout=(1,2))
+    plot(plt1,plt2; layout=(1,2),size=(800,500))
 end
-
-
 
 # save it locally
 mkpath(F.dir_plots)

@@ -29,7 +29,13 @@ end
 
 
 const standard_sizes = collect(2 .^(-1.56:.7:2.64))
-standardize_size(s) = standard_sizes[argmin(abs.(s .- standard_sizes))]
+const standard_sizes_rel = standard_sizes ./ standard_sizes[2]
+function standardize_size(s::R,reference::AbstractVector{R}=standard_sizes ;
+        atol=0.1) where R<:Real
+    idx = findfirst(isapprox.(s,reference;atol=atol))
+    isnothing(idx) && return s
+    return reference[idx]
+end
 
 # general utility functions
 
@@ -507,6 +513,21 @@ function define_series(df_spk::DataFrame ; secondary_features = [:natimg,:phase,
   """
   return sort!(ret,vcat(neuselector,:series))
 end
+
+
+function relativize_sizes(df)
+  function f_sizerel(rates,sizes)
+    (_,is_rf,_)  = get_idx_rf_and_large(rates,sizes) # this also tests the vectors
+    size_rf = sizes[findfirst(is_rf)]
+    return map( s->standardize_size( s/size_rf ,standard_sizes_rel) , sizes)
+  end
+  dfret = transform(groupbyseries(df) ,
+     [:spk_mean, :size] => f_sizerel => :size_rel )
+  select!(dfret,Not(:size))
+  rename!(dfret , :size_rel=>:size)
+  return dfret
+end
+
 
 function average_over_series(data_spikecounts_series ; relative_rates=false)
   dat = data_spikecounts_series
