@@ -61,11 +61,12 @@ data_spikecounts_series = df =  F. define_series(data_spikecounts;
 data_series_filt = F.filter_data(data_spikecounts_series, data_filters...)
 
 ##
+# size relative to RF size
+data_relative_sizes = F.relativize_sizes(data_series_filt)
 
 function plot_single_neurons(data,session,electrode,neuron,series ; ci=0.68)
-  dat = F.relativize_sizes(data)
   all_sess = data.session |> unique
-  dat = @where(dat,
+  dat = @where(data,
         :session .== all_sess[session],:electrode .==electrode,
         :neuron .== neuron , :series.==series)
   @assert !isempty(dat) "empty selection"
@@ -105,12 +106,12 @@ function plot_single_neurons(data,session,electrode,neuron,series ; ci=0.68)
 
 ## Select 2 neurons and specific stimuli, and plot
 
-plt1 = plot_single_neurons(data_series_filt, 2,41,2,3)
-plt2 = plot_single_neurons(data_series_filt, 2,41,2,3)
+plt1 = plot_single_neurons(data_relative_sizes, 2,41,2,3)
+plt2 = plot_single_neurons(data_relative_sizes, 1,17,1,4)
 
 plt = plot(plt1,plt2 ; layout=(2,1), size=(600,850))
 
-# save it locally
+# save the plot
 mkpath(F.dir_plots)
 figname = date2str()*"_main_2E.png"
 fignamefull = joinpath(F.dir_plots,figname)

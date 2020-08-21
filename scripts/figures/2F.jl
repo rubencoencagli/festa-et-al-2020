@@ -23,10 +23,8 @@ const sizes = F.get_sizes(dataspikes)
 ## Filters used to select the neurons
 data_filters =[
          F.NoNatGap(), # exclude stimulus with gap
-         F.MinMeanCount(0.01), # no mean spk count below 0.01
-         F.ResponseScore(1.0), # best response should be above baseline + 1 std baseline
          F.AverageFFLower(2.0),
-         F.ByRFSizes([2,3]), # RF size should only be 0.5 or 0.9 , not smaller or higher
+         F.ByRFSizes([2,3]),# RF size should only be 0.5 or 0.9 , not smaller or higher
          F.SurroundSuppression(0.15) ] # sufficient rate surround suppression
 ##
 # Include only responsive stimuli
@@ -41,6 +39,7 @@ data_latency =
 # spontaneous rates (for inspection)
 data_spontaneous = F.get_spontaneus_rates(dataspikes, window_blank)
 
+
 # now spikecounts for selected stimuli
 data_spikecounts = let dat=dataspikes ,
   # select the neurons included, and the views included
@@ -54,10 +53,37 @@ data_spikecounts = let dat=dataspikes ,
 end
 
 # define series using secondary features
-data_spikecounts_series = df =  F. define_series(data_spikecounts;
+data_spikecounts_series = F. define_series(data_spikecounts;
       secondary_features=secondary_features)
-##
 
+##
 data_series_filt = F.filter_data(data_spikecounts_series, data_filters...)
 
-## TODO
+##
+
+data_series_relsizes=F.relativize_sizes(data_series_filt)
+
+data_neus=F.average_over_series(data_series_relsizes,:size)
+
+data_pop=F.population_average_sizetuning(data_neus)
+
+plt = let dat=data_pop,
+  nneus=F.nneus(data_neus),
+  p=plot(title="Data, natural area summation curve, N = $nneus" ,
+      xlabel="stimulus  size relative to RF" , ylims=(0,1.6))
+  xplot = dat.size
+  plot!(p, xplot, dat.mean; ribbon=[dat.mean_ddown,dat.mean_dup],
+    linewidth=3, marker=:diamond , label="mean spike count (normalized)",
+    ylims=(0,1.2), xlims=(0.3,10),  xscale=:log10,
+    color=colorant"OrangeRed")
+  plot!(twinx(), xplot, dat.geomean; ribbon= [dat.geomean_ddown,dat.geomean_dup],
+    linewidth=3, marker=:diamond , label="geomean FF",legend=:topleft,
+    color=:blue , ylims = (0.9,1.7) ,xlims=(0.3,10),  xscale=:log10)
+end
+##
+# save the plot
+mkpath(F.dir_plots)
+figname = date2str()*"_main_2F.png"
+fignamefull = joinpath(F.dir_plots,figname)
+savefig(plt,fignamefull)
+@info "Figure saved as $(fignamefull) . All done!"

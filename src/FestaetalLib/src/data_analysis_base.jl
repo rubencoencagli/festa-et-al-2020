@@ -515,11 +515,12 @@ function define_series(df_spk::DataFrame ; secondary_features = [:natimg,:phase,
 end
 
 
-function relativize_sizes(df)
+function relativize_sizes(df;atol=0.1)
   function f_sizerel(rates,sizes)
     (_,is_rf,_)  = get_idx_rf_and_large(rates,sizes) # this also tests the vectors
     size_rf = sizes[findfirst(is_rf)]
-    return map( s->standardize_size( s/size_rf ,standard_sizes_rel) , sizes)
+    return map(
+        s-> standardize_size(s/size_rf,standard_sizes_rel;atol=atol), sizes)
   end
   dfret = transform(groupbyseries(df) ,
      [:spk_mean, :size] => f_sizerel => :size_rel )
@@ -528,20 +529,21 @@ function relativize_sizes(df)
   return dfret
 end
 
-
-function average_over_series(data_spikecounts_series ; relative_rates=false)
-  dat = data_spikecounts_series
-  sizes = get_sizes(dat)
+function average_over_series(dfdata, primary_feature)
+  df_byfeature = groupby(dfdata,vcat(neuselector,primary_feature))
   # average by series done here
-  dfret =  combine(groupby(dat,neuselector) ,
+  dfret =  combine(df_byfeature,
     :spk_mean => mean  => :spk_mean ,
     :spk_mean => var  => :spk_var , # variance across means!
     :spk_ff => geomean =>:spk_ff )
-  if ! relative_rates
-      return dfret
-  end
-  error("This part has not been covered yet")
-  return nothing
+  # now add relative rates
+  # add the max rate for each neuron across primary feat
+  transform!(groupby(dfret,neuselector),
+    :spk_mean => maximum => :spk_mean_max)
+  transform!(dfret, [:spk_mean,:spk_mean_max]=>
+    ((a,b)-> a ./ b) =>:spk_mean_rel)
+  select!(dfret,Not(:spk_mean_max))
+  return dfret
 end
 
 function average_over_series_rel_old(data_spikecounts_series ; sizesnat = 2,sizesgrat=7)

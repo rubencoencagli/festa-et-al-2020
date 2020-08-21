@@ -20,7 +20,7 @@ function read_views_natural_sizetuning(file)
   dfview_ret[!,:view] = Int8.(dfview_ret_raw[:,1])
   dfview_ret[!,:quadID] = Int8.(dfview_ret_raw[:,2])
   dfview_ret[!,:phaseImg] = Int16.(dfview_ret_raw[:,3])
-  stim_sizes =standardize_size.([0.3,0.5,1.,2.,5.,5.])
+  stim_sizes = standardize_size.([0.33,0.55,0.9,2.3,3.8,3.8];atol=0.15)
   stim_hasgap = [falses(5)...,true]
   infoquads = let sz = repeat(stim_sizes,outer=10),
     sz = reshape(sz,2,2,15),
@@ -65,4 +65,27 @@ function SpikingData_natural_sizetuning()
   views = read_views_natural_sizetuning(filenames[1])
   # define the object
   return SpikingData(spikes, views, time_stim,time_bins,times)
+end
+
+function population_average_sizetuning_old(dfpop,primary_feature::Symbol=:size)
+  return combine(groupby(dfpop, primary_feature; sort=true)) do df
+    _spk_means = [s for s in df.spk_rate_rel]
+    _spk_ffs = [s for s in df.spk_ff]
+    spk_mean, spk_cidown, spk_ciup, spk_ddown, spk_dup = mean_boot(_spk_means)
+    ff_geomean, ff_cidown, ff_ciup, ff_ddown,ff_dup = geomean_boot(_spk_ffs)
+    @eponymtuple( spk_mean, spk_cidown, spk_ciup , spk_ddown, spk_dup,
+      ff_geomean, ff_cidown, ff_ciup , ff_ddown, ff_dup)
+  end
+end
+
+
+function population_average_sizetuning(dfpop,primary_feature::Symbol=:size)
+  function do_averages(means,ffs)
+    bmeans = mean_boot(means)
+    bffs = geomean_boot(ffs)
+    return merge(bmeans,bffs)
+  end
+  dfret=combine([:spk_mean_rel,:spk_ff]=>do_averages,
+   groupby(dfpop, primary_feature))
+  return sort!(dfret,primary_feature)
 end
