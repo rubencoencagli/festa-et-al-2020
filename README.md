@@ -46,7 +46,7 @@ Figures are then saved in the `plots` folder, created in the home directory of t
 
 + Remove the chached files, contained in `src/tmp`
 + Call the script with the `--rebuildGSM` option, for example:  
-   `julia figX.jl --rebuildGSM` .
+   `julia paperfigures/3A.jl --rebuildGSM` .
 
 ## Inspecting the code
 

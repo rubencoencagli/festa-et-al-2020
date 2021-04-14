@@ -54,42 +54,6 @@ p_perc(a,b) = spitp(score_perc.(a,b))
 round2(x)=round(x;sigdigits=2)
 round3(x)=round(x;sigdigits=3)
 
-# function ntup2df(ntup)
-#   df=DataFrame()
-#   for (k,v) in pairs(ntup)
-#     df[!,k] = [v]
-#   end
-#   return df
-# end
-
-# function matrix_to_dataframe(matrix, cols_tuple , spikenames=:spikes ;
-#      verbose=true)
-#     cols = values(cols_tuple)
-#     @assert length(cols) == ndims(matrix) "number of parameter values wrong!"
-#     szmat = size(matrix)
-#     ntrials=szmat[end]
-#     @assert begin
-#         a = [ length(c) == d for (c,d) in zip(cols,szmat[1:end-1]) ]
-#         all(a)
-#     end "wrong column sizes!"
-#     dfret = DataFrame()
-#     ktot = length(cols_tuple)
-#     for (k,(key,col)) in enumerate(pairs(cols_tuple))
-#         if verbose
-#             @info "building data column $k of $ktot ... "
-#         end
-#         _sz = [szmat...]
-#         _szre = copy(_sz)
-#         _szre[Not(k)] .= 1
-#         _c = reshape(col,Tuple(_szre))
-#         _sz[k]=1
-#         _mat  = repeat(_c; outer=_sz)
-#         dfret[!,key] = _mat[:]
-#     end
-#     if verbose ; @info "Adding the data !" ; end
-#     dfret[!,spikenames] = matrix[:]
-#     return dfret
-# end
 
 """
         matrix_bin_vects(mat::AbstractArray)
@@ -407,81 +371,6 @@ function get_views_included_sizetuning(resps::DataFrame, views::DataFrame; kthre
     return grats_select
 end
 
-# function get_views_included_natural_old(natsresps::DataFrame; kthresh = 1.0)
-#   nneuspre =nneus(natsresps)
-#   nneuspre == 0 && return DataFrame()
-#   nnats = nrow(unique(select(natsresps,:natimg)))
-#   # select RF size, and good response
-#   _views_filter = let _rf = @where(natsresps, :size .< 1.3)
-#     _idx_keep = ( _rf.spk_mean .>=(_rf.blank_mean .+  kthresh*sqrt.(_rf.blank_var)))
-#     _rf[_idx_keep,vcat(neuselector,:natimg)]
-#   end
-#   nats_select = join(natsresps, _views_filter ; on=names(_views_filter), kind=:semi )
-#   nnatspost = nrow(unique(select(nats_select,vcat(neuselector,:natimg))))
-#   colskeep=vcat(neuselector,:view)
-#   npost=nneus(nats_select)
-#   select!(nats_select,colskeep)
-#   @info "natural images, $nneuspre neurons, $nnats images each"
-#   @info " after selection, $npost neurons, $nnatspost combinations of neuron/image"
-#   return nats_select
-# end
-#
-# function get_views_included_sizetuning_old(dfresps::DataFrame;
-#       kthresh = 1.0, secondary_features=[:phase,:ori]  )
-#   nneus(df)= nrow(dfneus(df))
-#   nneuspre =nneus(dfresps)
-#   nneuspre == 0 && return DataFrame()
-#   serselector = vcat(neuselector,secondary_features)
-#   sizes = sort(unique(dfresps.size))
-#   _filt = combine(groupby(dfresps,serselector)) do df
-#     # max over size that is not first or last
-#     (_ , is_rf, _ )  = _rf_and_large_sizes(df.spk_mean,df.size,false)
-#     rf_isbad = (df.size[is_rf] == sizes[1]) || (df.size[is_rf] == sizes[end])
-#     rfmean = rf_isbad ? -Inf : df.spk_mean[is_rf][1]
-#     keep = rfmean >= (df.blank_mean[1] +  kthresh*sqrt.(df.blank_var[1]))
-#     DataFrame(keep = keep)
-#   end
-#   _filt = _filt[_filt.keep,:]
-#   #select!(_filt,Not(:keep))
-#   grats_select = join(dfresps, _filt ; on=serselector, kind=:semi )
-#   nneuspost=nneus(grats_select)
-#   @info "gratings, $nneuspre neurons"
-#   @info "after selection: $nneuspost neurons"
-#   return grats_select
-# end
-#
-# function get_views_included_old(sd::SpikingData ;
-#       kthresh = 1.0,  secondary_features=[:phase,:ori],
-#       window_stim = (50E-5,150E-3) , window_blank = (25E-3,75E-3) )
-#   resps = get_blank_and_window(sd,window_blank,window_stim)
-#   # gratings first
-#   viewsgrat = @where(sd.views, ismissing.(:natimg))
-#   # natural img
-#   viewsnats = @where(sd.views, .!ismissing.(:natimg))
-#   if nrow(viewsnats) == 0
-#     @warn "No natural images among the stimuli"
-#     respsgrat = join(resps,viewsgrat ; on=:view)
-#     grats_views = get_views_included_sizetuning_old(respsgrat ;
-#       kthresh=kthresh, secondary_features=secondary_features)
-#     ret = grats_views
-#   elseif nrow(viewsgrat) == 0
-#     @warn "No gratings among the stimuli"
-#     respsnats = join(resps,viewsnats ; on=:view)
-#     nats_views = get_views_included_natural_old(respsnats ; kthresh=kthresh)
-#     ret = nats_views
-#   else
-#     @warn "Both gratings and natural images among the stimuli"
-#     respsgrat = join(resps,viewsgrat ; on=:view)
-#     grats_views = get_views_included_sizetuning_old(respsgrat ;
-#           kthresh=kthresh, secondary_features=secondary_features)
-#     respsnats = join(resps,viewsnats ; on=:view)
-#     nats_views = get_views_included_natural_old(respsnats ; kthresh=kthresh)
-#     cols = intersect(names.([grats_views,nats_views])...) # meh
-#     ret = vcat(select(grats_views,cols),select(nats_views,cols))
-#   end
-#   return  semijoin(resps,ret ; on=intersect(names.([ret,resps])...))
-# end
-#
 
 
 """
