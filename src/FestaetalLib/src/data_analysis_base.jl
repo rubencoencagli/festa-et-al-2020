@@ -228,12 +228,13 @@ function get_spontaneus_rates(sd::SpikingData , window::Tuple)
     idxs = (0.0 .<= times .<= tp) .|
      ( (tend+tn) .< sd.times )
   end
-  function mean_etc(spk)
+  function mean_etc(df)
+      spk = df.spk
       _mu,_var,_ = spikes_mean_and_var(spk , idxs ; use_khz=true)
       _ff = _mu == 0 ? missing : _var/_mu
       return DataFrame(blank_mean=_mu,blank_var=_var,blank_ff=_ff)
   end
-  return combine(:spk => mean_etc , groupby(sd.spikes,neuselector))
+  return combine(mean_etc,groupby(sd.spikes,neuselector))
 end
 
 

@@ -136,7 +136,7 @@ function get_psth(spikes_select::Vector{BitArray{1}}, times::Vector{Float64} ;
   (time=times , psth = counts , psth_smooth = counts_smooth)
 end
 function get_psth(sd::SpikingData,dffilter; smooth_scale::Float64=1E-6)
-  _spikes = join(sd.spikes,dffilter;on=names(dffilter), kind=:semi).spk
+  _spikes = semijoin(sd.spikes,dffilter;on=names(dffilter)).spk
   times = sd.times
   get_psth(_spikes,times; smooth_scale=smooth_scale)
 end
@@ -151,7 +151,7 @@ end
 function dfqueryneuron(df,dfquery)
   dfq = dfneus(dfquery)
   @assert nrow(dfq) == 1  "you can query only one neuron at a time"
-  dfout = join(df,dfq;on=names(dfq),kind=:semi)
+  dfout = semijoin(df,dfq;on=names(dfq))
   @assert !isempty(dfout)  "neuron not found (rows =  $(nrow(df)))"
   return dfout
 end
@@ -180,9 +180,9 @@ end
 
 
 function _test_latency(neuron_select::DataFrame, sd::SpikingData,included_data)
-  _spikes = join(sd.spikes, neuron_select ; on=names(neuron_select), kind=:semi)
-  spk_good = join(_spikes, included_data;on=vcat(neuselector,:view) , kind = :semi)
-  incl_select = join(included_data,neuron_select; on=neuselector, kind=:semi)
+  _spikes = semijoin(sd.spikes, neuron_select ; on=names(neuron_select))
+  spk_good = semijoin(_spikes, included_data;on=vcat(neuselector,:view))
+  incl_select = semijoin(included_data,neuron_select; on=neuselector)
   @show nrow(incl_select)
   @assert all(incl_select.blank_mean .== incl_select.blank_mean[1] )
   @assert all(incl_select.blank_var .== incl_select.blank_var[1] )
@@ -193,7 +193,7 @@ function _test_latency(neuron_select::DataFrame, sd::SpikingData,included_data)
   else
     views_good = sd.views
   end
-  dfgoodv = join(spk_good,views_good; on=:view , kind=:semi)
+  dfgoodv = semijoin(spk_good,views_good; on=:view )
   psth_good = get_psth(dfgoodv.spk,ts)
   nt = length(ts)
   _blankmuline = fill(incl_select.blank_mean[1],nt )
@@ -219,8 +219,7 @@ end
 
 function compute_latency(sd::SpikingData, included_data ;
         min_latency=25E-3 , max_latency=100E-3, k_latency=2.0)
-  spk_good = join(sd.spikes, included_data;
-      on = vcat(neuselector,:view) , kind = :semi )
+  spk_good = semijoin(sd.spikes, included_data;on = vcat(neuselector,:view))
   if :size in names(sd.views)
     views_good = @where(sd.views, 0.4 .< :size .< 1.2 ).view
   else
@@ -422,7 +421,7 @@ end
 function population_blank_rel(dfpop,dfblank)
   dfpop = by(dfpop, [:session,:electrode,:neuron]) do df
     rate_norm = df.spk_mean[df.is_rf]
-    dfb = join(dfblank, select(df,[:session,:electrode,:neuron])  ; kind=:semi)
+    dfb = semijoin(dfblank, select(df,[:session,:electrode,:neuron]))
     @assert nrow(dfb) == 1
     blank_spk = dfb.spk_blank[1]
     blank_spk_rel = blank_spk ./ rate_norm
@@ -615,7 +614,7 @@ function meanmatch_get_leftright(dfdata; byneuron=false)
     end
     DataFrame(size=df.size, mm_label=mm_labels)
   end
-  return join(dfd,mergh; on=vcat(_selector,:size))
+  return innerjoin(dfd,mergh; on=vcat(_selector,:size))
 end
 
 

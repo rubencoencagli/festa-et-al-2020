@@ -5,7 +5,7 @@ using Statistics
 using DataFrames, DataFramesMeta
 using EponymTuples
 ## load data from .mat files, convert to object
-dataspikes= F.SpikingData_natural_sizetuning()
+dataspikes = F.SpikingData_natural_sizetuning()
 
 ##
 
@@ -23,11 +23,9 @@ const sizes = F.get_sizes(dataspikes)
 ## Filters used to select the neurons
 data_filters =[
          F.NoNatGap(), # exclude stimulus with gap
-         F.MinMeanCount(0.01), # no mean spk count below 0.01
-         F.ResponseScore(1.0), # best response should be above baseline + 1 std baseline
-         F.AverageFFLower(2.0),
          F.ByRFSizes([2,3]), # RF size should only be 0.5 or 0.9 , not smaller or higher
-         F.SurroundSuppression(0.15) ] # sufficient rate surround suppression
+         ]
+
 ##
 # Include only responsive stimuli
 views_included = F.get_views_included(dataspikes ;
@@ -64,7 +62,7 @@ data_series_filt = F.filter_data(data_spikecounts_series, data_filters...)
 # size relative to RF size
 data_relative_sizes = F.relativize_sizes(data_series_filt)
 
-function plot_single_neurons(data,session,electrode,neuron,series ; ci=0.68)
+function get_data_single_neuron(data,session,electrode,neuron,series ; ci=0.68)
   all_sess = data.session |> unique
   dat = @where(data,
         :session .== all_sess[session],:electrode .==electrode,
@@ -84,6 +82,12 @@ function plot_single_neurons(data,session,electrode,neuron,series ; ci=0.68)
   ret[!,:mean_cidown] .*=norm
   ret[!,:mean_dup] .*=norm
   ret[!,:mean_ddown] .*=norm
+  return ret
+end
+
+
+function plot_single_neuron(df_dat)
+  ret=df_dat
   # plot mean
   plot(ret.size,ret.mean ;
     color=colorant"forestgreen",
@@ -102,12 +106,17 @@ function plot_single_neurons(data,session,electrode,neuron,series ; ci=0.68)
     yerror=(ret.ff_dup,ret.ff_ddown),
     leg=false,xscale=:log10,
     ylabel="Fano factor")
-  end
+end
+function plot_single_neuron(data,session,electrode,neuron,series ; ci=0.68)
+  dat = get_data_single_neuron(data,session,electrode,neuron,series ; ci=0.68)
+  plot_single_neuron(dat)
+end
 
 ## Select 2 neurons and specific stimuli, and plot
+# N.B. the two example neurons here are different ones
+plt1 = plot_single_neuron(data_relative_sizes, 1,80,1,6)
+plt2 = plot_single_neuron(data_relative_sizes, 2,53,2,1)
 
-plt1 = plot_single_neurons(data_relative_sizes, 2,41,2,3)
-plt2 = plot_single_neurons(data_relative_sizes, 1,17,1,4)
 
 plt = plot(plt1,plt2 ; layout=(2,1), size=(600,850))
 

@@ -7,112 +7,10 @@ using DataFrames, DataFramesMeta
 
 ## load data from .mat files, convert to object
 
+dataspikes_monyet = F.read_surrori_monyet()
+dataspikes_cadet = F.read_surrori_cadet()
 
-
-## Monyet first
-using Dates ; date2str() = Dates.format(now(),"yyyymmdd")
-using Statistics , StatsBase, LinearAlgebra
-using Serialization , FileIO , Formatting, CSV
-using DataFrames, DataFramesMeta
-using Plots, Colors, NamedColors ; theme(:dark)
-# use c"color" rather than colorant"color"
-@eval const $(Symbol("@c_str")) = $(Symbol("@colorant_str"))
-using EponymTuples
-@eval const $(Symbol("@nt")) = $(Symbol("@eponymtuple"))
-
-const this_dir = @__DIR__()
-const dirroot = joinpath(this_dir,"../../")
-const dirdata = joinpath(dirroot,"Data/Sessions")
-
-# using new module!
-using DataAnalysisRCC ; const D = DataAnalysisRCC
-
-##
-# read and pre-process data from Matlab files
-# save it on temporary file and close
-
-const filetoread = joinpath(this_dir,"20200511MonyetSurrOri.jls")
-
-@warn "generating $filetoread"
-const datafiles = joinpath.(dirdata,"MonyetRing",
-  ["monyetV1p065hs_resorted_GratOriSurr.mat","monyetV1p066-67hs_resorted_GratOriSurr.mat" , "monyetV1p069-70-71hs_resorted_GratOriSurr.mat"])
-# datafiles = joinpath.(dirdata,"MonyetRing",
-#     ["monyetV1p065hs_GratOriSurr.mat","monyetV1p066-67hs_GratOriSurr.mat" , "monyetV1p069-70-71hs_GratOriSurr.mat"])
-const datafiles_less = joinpath.(dirdata,"MonyetRing",
-      ["monyetV1p065hs_resorted_GratOriSurr.mat"])
-@info "reading the matlab files..."
-@time dfdata  = D.read_monyet_awake_ori(datafiles)
-
-savename = filetoread
-@info "saving spike train dataframe in file $savename "
-open(savename,"w") do f
-  serialize(f,dfdata)
-end
-@info "All saved in $savename "
-
-# now cadet
-
-file_to_read = joinpath(this_dir,"20200511CadetSurrOri.jls")
-
-datafiles_spk = let fs = filter(f->occursin(r"_spikesRCC.mat\b",f),
-    readdir(joinpath(dirdata,"CadetRing")))
-  joinpath.(dirdata,"CadetRing",fs)
-end
-datafiles_snr = let fs = filter(f->occursin(r"_SNR.mat\b",f),
-  readdir(joinpath(dirdata,"CadetRing")))
-  joinpath.(dirdata,"CadetRing",fs)
-end
-dataspikes  = D.read_cadet_awake_ori(datafiles_spk)
-@info "saving spike train dataframe in file $file_to_read "
-open(file_to_read,"w") do f
-  serialize(f,dataspikes)
-end
-@info "All done!"
-
-
-
-
-
-
-
-
-using Dates ; date2str() = Dates.format(now(),"yyyymmdd")
-using Serialization , FileIO , Formatting, CSV
-using DataFrames, DataFramesMeta
-using Plots, Colors, NamedColors ;  theme(:dark)
-# use c"color" rather than colorant"color"
-@eval const $(Symbol("@c_str")) = $(Symbol("@colorant_str"))
-using EponymTuples
-@eval const $(Symbol("@nt")) = $(Symbol("@eponymtuple"))
-
-const this_dir = @__DIR__()
-const dirroot = abspath(joinpath(this_dir,"../../"))
-const dirdata = joinpath(dirroot,"Data/Sessions")
-
-# using new module!
-using DataAnalysisRCC ; const D = DataAnalysisRCC
-
-##
-# read and pre-process data from Matlab files
-# save it on temporary file and close
-
-const filetoread_cadet = joinpath(this_dir,"20200511CadetSurrOri.jls")
-const filetoread_monyet = joinpath(this_dir,"20200511MonyetSurrOri.jls")
-
-dataspikes_cadet = let readname = filetoread_cadet
-  @assert isfile(readname)
-  d = open(deserialize,readname,"r")
-  D.filter_cadet(d,D.Ring)
-end
-dataspikes_monyet = let readname = filetoread_monyet
-  @assert isfile(readname)
-  dfdata = open(deserialize, readname, "r")
-  D.monyet_awake_spikingdata(dfdata)
-end
-
-
-# @nm dataspikes_cadet.views
-# @nm dataspikes_monyet.views
+@info "Data files read!"
 
 ## parameters
 const time_count = 200E-3
@@ -124,101 +22,65 @@ const kthresh= 1.0
 const k_latency = 1.0
 const min_latency = 40E-3
 const max_latency = 90E-3
-const sizes = D.get_sizes(dataspikes_cadet)
+const sizes = F.get_sizes(dataspikes_cadet)
 const window_stim = window_spk
 const window_blank = window_0
 
 const data_filters = [
-    D.BestOri(),
-    D.HighestContrast(0.99),
-    D.AverageFFLower(2.0) ]
-    # D.OrientationTuning(0.0),
-    # D.SurroundSuppressionScoreOri(-0.0), # -0.5
+    F.BestOri(),
+    F.HighestContrast(0.99),
+    F.AverageFFLower(2.0) ]
 
 ##
-# part 1 , data latency
-# 1 , 2
-views_included_cadet = D.get_views_included_surrori(dataspikes_cadet ; kthresh=kthresh ,
+# This is equivalent to the procedure for figure 2F
+# but repeated on the two datasets
+views_included_cadet = F.get_views_included_surrori(dataspikes_cadet ; kthresh=kthresh ,
         secondary_features=[:oriC],
         window_stim=window_spk, window_blank=window_0)
-views_included_monyet = D.get_views_included_surrori(dataspikes_monyet ; kthresh=kthresh ,
+views_included_monyet = F.get_views_included_surrori(dataspikes_monyet ; kthresh=kthresh ,
         secondary_features=[:oriC, :contrast],
         window_stim=window_spk, window_blank=window_0)
-data_latency_cadet = D.compute_latency(dataspikes_cadet,views_included_cadet ;
+data_latency_cadet = F.compute_latency(dataspikes_cadet,views_included_cadet ;
                 min_latency=min_latency , max_latency=max_latency, k_latency=k_latency)
-data_latency_monyet = D.compute_latency(dataspikes_monyet,views_included_monyet ;
+data_latency_monyet = F.compute_latency(dataspikes_monyet,views_included_monyet ;
         min_latency=min_latency , max_latency=max_latency, k_latency=k_latency)
 
-data_spontaneous_cadet = D.get_spontaneus_rates(dataspikes_cadet, window_blank)
-data_spontaneous_monyet = D.get_spontaneus_rates(dataspikes_monyet, window_blank)
+data_spontaneous_cadet = F.get_spontaneus_rates(dataspikes_cadet, window_blank)
+data_spontaneous_monyet = F.get_spontaneus_rates(dataspikes_monyet, window_blank)
 data_spontaneous = vcat(data_spontaneous_cadet,data_spontaneous_monyet)
 
 
-data_responses_cadet = D.get_responses_window(dataspikes_cadet, window_spk)
-data_responses_monyet = D.get_responses_window(dataspikes_monyet, window_spk)
+data_responses_cadet = F.get_responses_window(dataspikes_cadet, window_spk)
+data_responses_monyet = F.get_responses_window(dataspikes_monyet, window_spk)
 data_responses = vcat(data_responses_cadet,data_responses_monyet)
 
 
-
-##
-
-_ = if false let dat=data_spontaneous_monyet,x=dat.blank_mean,y=sqrt.(dat.blank_var)
-  p=scatter(x,y; ratio=1,leg=false)
-  plot!(p,range(0;stop=0.05,length=10),identity,linewidth=2)
-end end
-
-_ = if false let dat=data_spontaneous,x=@. sqrt(dat.blank_var) / dat.blank_mean
-  histogram(x;nbins=100)
-end end
-##
-
-_ = if false let lat = data_latency , dosave=false,
-  f=bar(sort(lat.latency); leg=false,xlabel="neuron",ylabel="latency time [s]")
-  if dosave
-    savefig(f,joinpath(this_dir,date2str()*"CadetLatencies.png"))
-  end
-  f
-end end
-
-_ = if false let incl = views_included_cadet , sd=dataspikes_cadet,
-  dflat = data_latency_cadet,
-  neu=4,
-  filt = D.dfneus(dflat)[neu:neu,:],
-  # show the latency
-  lat = semijoin(dflat,filt; on=D.neuselector,matchmissing=:equal)
-  lat = lat.latency[1]
-  @info "the latency for neuron $(filt.neuron[1]) is $lat"
-  (ts, all_smooth , good_smooth, _blankmuline, _spkmuline)=D._test_latency(filt, sd,incl)
-  plot(ts, [ all_smooth,  good_smooth, _blankmuline, _spkmuline];
-  label =["psth all" "psth good" "blank mean" "spk mean" "thresh"], linewidth=3 )
-  plot!( [lat , lat],[ylims()...] ; color=:black, linestyle=:dash,label="")
-end end
 
 ##
 # now spikecounts for selected stimuli
 data_spikecounts_cadet = let dat=dataspikes_cadet , dflat=data_latency_cadet,
   dfw = views_included_cadet,
   # select the neurons included, and the views included
-  spikes = semijoin(dat.spikes, dflat ; on=D.neuselector)
-  spikes = semijoin(spikes, dfw;on=vcat(D.neuselector,:view))
+  spikes = semijoin(dat.spikes, dflat ; on=F.neuselector)
+  spikes = semijoin(spikes, dfw;on=vcat(F.neuselector,:view))
   times = dat.times
   # add views parameters, latency
-  dfcount =D.count_spikes(spikes,times,dflat; time_count=time_count)
+  dfcount =F.count_spikes(spikes,times,dflat; time_count=time_count)
   ret = innerjoin( dfcount , dat.views ; on=:view,matchmissing=:equal)
-  sort!(ret,vcat(D.neuselector,secondary_feat_cadet))
+  sort!(ret,vcat(F.neuselector,secondary_feat_cadet))
 end
 
 
 data_spikecounts_monyet = let dat=dataspikes_monyet , dflat=data_latency_monyet,
   dfw = views_included_monyet,
   # select the neurons included, and the views included
-  spikes = semijoin(dat.spikes, dflat ; on=D.neuselector)
-  spikes = semijoin(spikes, dfw; on=vcat(D.neuselector,:view))
+  spikes = semijoin(dat.spikes, dflat ; on=F.neuselector)
+  spikes = semijoin(spikes, dfw; on=vcat(F.neuselector,:view))
   times = dat.times
   # add views parameters, latency
-  dfcount =D.count_spikes(spikes,times,dflat; time_count=time_count)
+  dfcount =F.count_spikes(spikes,times,dflat; time_count=time_count)
   ret = innerjoin( dfcount , dat.views ; on=:view,matchmissing=:equal)
-  sort!(ret,vcat(D.neuselector,secondary_feat_monyet))
+  sort!(ret,vcat(F.neuselector,secondary_feat_monyet))
 end
 
 data_spikecounts = let dfc=deepcopy(data_spikecounts_cadet),
@@ -232,18 +94,16 @@ end
 categorical!(data_spikecounts,:contrast)
 
 data_spikecounts_series = let dat=data_spikecounts,
-    df =  D.define_series_surrori(data_spikecounts;
+    df =  F.define_series_surrori(data_spikecounts;
           secondary_features=secondary_feat_monyet)
-    sort!(df,vcat(D.neuselector,:series))
+    sort!(df,vcat(F.neuselector,:series))
 end
 
 ##
 
-@nm data_spikecounts_series
-
-data_series_filt = D.filter_series(data_spikecounts_series, data_filters...)
-data_series_neus = D.average_over_series_surrori(data_series_filt)
-data_pop_average = D.population_average_surrori(data_series_neus;ci=0.68)
+data_series_filt = F.filter_data(data_spikecounts_series, data_filters...)
+data_series_neus = F.average_over_series_surrori(data_series_filt)
+data_pop_average = F.population_average_surrori(data_series_neus;ci=0.68)
 
 
 ## Histogram of ff differences, considering the averages over series for each neuron

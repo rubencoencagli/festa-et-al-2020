@@ -114,6 +114,50 @@ function _filter_data(df,p::SurroundSuppression)
   return  df_to_keep!(df)
 end
 
+
+# filter for surroind orientation experiments
+
+struct BestOri <: DataFilter
+end
+
+function _filter_data(dfs,p::BestOri)
+  serselector = vcat(neuselector,:series)
+  dffilt = combine(groupby(dfs, neuselector)) do df
+    if :contrast in names(df)
+      dfrf = @where(df, ismissing.(:oriS),:contrast .== 1)
+    else
+      dfrf = @where(df, ismissing.(:oriS))
+    end
+    sers = (df.session[1],df.electrode[1],df.neuron[1])
+    if isempty(dfrf)
+      @warn "contrast 1 not found, cannot estimate best orientation"
+      @warn " session $(sers[1]) , electrode $(sers[2]), neuron $(sers[3])"
+      keep = false
+    else
+      oriCkeep = dfrf.oriC[argmax(dfrf.spk_mean)]
+      keep =  df.oriC .== oriCkeep
+    end
+    return DataFrame(to_keep = keep,series=df.series)
+  end
+  # dffilt = dffilt[dffilt.keep,:]
+  # return semijoin(dfs,dffilt ; on=serselector)
+  return df_to_keep!(dffilt)
+end
+
+struct HighestContrast <: DataFilter
+  c::Float64
+end
+
+
+function _filter_data(dfs,p::HighestContrast)
+    serselector = vcat(neuselector,:series)
+    dffilt = combine(groupby(dfs,serselector),
+        :contrast => ( _c-> (unwrap(_c[1]) > p.c) ) => :to_keep)
+    # dffilt = dffilt[dffilt.keep,:]
+    # return semijoin(dfs,dffilt ; on=serselector)
+    return df_to_keep!(dffilt)
+end
+
 # function filter_data(dfs, p::SurroundSuppression)
 #   serselector = vcat(neuselector,:series)
 #   dffilt = combine(groupby(dfs,serselector)) do df
