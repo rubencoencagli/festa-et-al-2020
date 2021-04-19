@@ -233,9 +233,26 @@ function define_series_surrori( data_spikecounts::DataFrame;
   return ret
 end
 
+
+"""
+    add_relative_ff(df_series) -> df_series_relff
+
+For each series, selects the FF for RF stimulus, and uses it to compute a "relative" FF
+"""
+function add_relative_ff(df_series)
+  serselector = vcat(neuselector,:series)
+  dfrelff = combine(groupby(df_series,serselector ; sort=true)) do df
+    dfrf = @where(df, ismissing.(:oriS) )
+    @assert nrow(dfrf) .== 1
+    ff_rf = dfrf.spk_ff[1]
+    (ff_rel = df.spk_ff ./ ff_rf, oriS = df.oriS )
+  end
+  return innerjoin(df_series,dfrelff ; on=vcat(serselector,:oriS),matchmissing=:equal)
+end
+
+
 function average_over_series_surrori(dat)
   if !( :ff_rel in names(dat) )
-    @warn "adding relative ff measure to series data"
     dat = add_relative_ff(dat)
   end
   _to_join = vcat(neuselector,:oriS)
@@ -326,4 +343,70 @@ function ff_differences_byseries_surrori_symmetrized(dfdata)
       ffd_issigni = BitArray(ffd_issigni)
       @eponymtuple(ffd,ffd_issigni)
     end
+end
+
+## Histogram of ff differences, considering the averages over series for each neuron
+#
+
+function surrori_get_keyvals_neus(df_neus)
+  if !( "ff_rel" in names(df_neus) )
+    df_neus = add_relative_ff(df_neus)
   end
+  return combine(groupby(df_neus,neuselector)) do df
+    dfrf = @where(df , ismissing.(:oriS))
+    @assert nrow(dfrf) == 1 ; dfrf = dfrf[1,:]
+    dflg = @where(df , .!ismissing.(:oriS),:oriS .== 0)
+    @assert nrow(dflg) == 1 ; dflg = dflg[1,:]
+    dfpe = @where(df , .!ismissing.(:oriS),:oriS .== 90)
+    @assert nrow(dfpe) == 1 ; dfpe = dfpe[1,:]
+    # add if difference is is significant !
+    ff_diff_pelg,ff_diff_pelg_issigni =
+       ff_diff_signi(dfpe.spk_count,dflg.spk_count)
+    rate_diff_pelg,rate_diff_pelg_issigni =
+      rate_diff_signi(dfpe.spk_count,dflg.spk_count)
+    (ff_rf = dfrf.spk_ff ,  ff_lg = dflg.spk_ff ,ff_pe = dfpe.spk_ff,
+      ff_rel_rf = dfrf.ff_rel ,  ff_rel_lg = dflg.ff_rel ,ff_rel_pe = dfpe.ff_rel,
+      spk_rf = dfrf.spk_mean ,  spk_lg = dflg.spk_mean, spk_pe = dfpe.spk_mean,
+      spk_rel_rf = dfrf.spk_mean / dfrf.spk_mean ,
+      spk_rel_lg = dflg.spk_mean / dfrf.spk_mean,
+      spk_rel_pe = dfpe.spk_mean / dfrf.spk_mean,
+      ff_diff_pelg = ff_diff_pelg, ff_diff_pelg_issigni=ff_diff_pelg_issigni,
+      rate_diff_pelg = rate_diff_pelg, rate_diff_pelg_issigni=rate_diff_pelg_issigni)
+  end
+end
+function surrori_get_keyvals_means(dfkvals)
+  #spk first
+  spk_rel_lg = mean_boot(dfkvals.spk_rel_lg; prefix="spk_rel_lg_mean")
+  spk_rel_pe = mean_boot(dfkvals.spk_rel_pe; prefix="spk_rel_pe_mean")
+  p_spk_rel_pelg = spitp(dfkvals.spk_rel_pe,dfkvals.spk_rel_lg)
+  #spk , non relative
+  spk_lg = mean_boot(dfkvals.spk_lg; prefix="spk_lg_mean")
+  spk_pe = mean_boot(dfkvals.spk_pe; prefix="spk_pe_mean")
+  p_spk_pelg = spitp(dfkvals.spk_pe,dfkvals.spk_lg)
+  # now fanos
+  ff_rel_lg = geomean_boot(dfkvals.ff_rel_lg; prefix="ff_rel_lg_geomean")
+  ff_rel_pe = geomean_boot(dfkvals.ff_rel_pe; prefix="ff_rel_pe_geomean")
+  #non relative version
+  ff_lg = geomean_boot(dfkvals.ff_lg; prefix="ff_lg_geomean")
+  ff_pe = geomean_boot(dfkvals.ff_pe; prefix="ff_pe_geomean")
+  p_ff_rel_pelg = spitp(dfkvals.ff_rel_pe,dfkvals.ff_rel_lg)
+  p_ff_pelg = spitp(dfkvals.ff_pe,dfkvals.ff_lg)
+  # score for spk and FF , and p value of score
+  scorefun(a,b)= 200*(a-b)/(a+b)
+  _scors =   scorefun.(dfkvals.spk_pe,dfkvals.spk_lg)
+  scor_spk_pelg = mean_boot(_scors ;  prefix="spk_score_pelg_mean"  )
+  p_spk_score_pelg = spitp(_scors)
+  _scors =   scorefun.(dfkvals.spk_rf,dfkvals.spk_lg)
+  scor_spk_rflg = mean_boot(_scors ; prefix="spk_score_rflg_mean"  )
+  p_spk_score_rflg = spitp(_scors)
+  _scors =   scorefun.(dfkvals.ff_rf,dfkvals.ff_lg)
+  scor_ff_rflg = mean_boot( _scors ; prefix="ff_score_rflg_mean"  )
+  p_ff_score_rflg =spitp(_scors)
+  _scors =   scorefun.(dfkvals.ff_pe,dfkvals.ff_lg)
+  scor_ff_pelg = mean_boot(_scors ; prefix="ff_score_pelg_mean"  )
+  p_ff_score_pelg = spitp(_scors)
+  return merge(spk_lg,spk_pe,spk_rel_lg,spk_rel_pe,ff_rel_lg,ff_rel_pe,ff_lg,ff_pe,
+    scor_spk_pelg,scor_spk_rflg,scor_ff_pelg,scor_ff_rflg,
+    @eponymtuple(p_spk_pelg,p_spk_rel_pelg,p_ff_pelg,p_ff_rel_pelg,
+    p_spk_score_pelg,p_spk_score_rflg,p_ff_score_pelg,p_ff_score_rflg ))
+end

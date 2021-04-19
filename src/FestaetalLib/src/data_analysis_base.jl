@@ -157,6 +157,7 @@ dfneus(dat::SpikingData) = dfneus(dat.spikes)
 get_sizes(df) = sort(unique(df[!,:size]))
 get_sizes(dat::SpikingData) = get_sizes(dat.views)
 
+groupbyneuron(df::AbstractDataFrame) = groupby(df,neuselector;sort=true)
 groupbyseries(df::AbstractDataFrame) = groupby(df,serselector;sort=true)
 
 nneus(df) = length(groupby(df,neuselector))

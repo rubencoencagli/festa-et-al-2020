@@ -120,42 +120,40 @@ end
 struct BestOri <: DataFilter
 end
 
-function _filter_data(dfs,p::BestOri)
-  serselector = vcat(neuselector,:series)
-  dffilt = combine(groupby(dfs, neuselector)) do df
-    if :contrast in names(df)
-      dfrf = @where(df, ismissing.(:oriS),:contrast .== 1)
-    else
-      dfrf = @where(df, ismissing.(:oriS))
-    end
-    sers = (df.session[1],df.electrode[1],df.neuron[1])
-    if isempty(dfrf)
-      @warn "contrast 1 not found, cannot estimate best orientation"
-      @warn " session $(sers[1]) , electrode $(sers[2]), neuron $(sers[3])"
-      keep = false
-    else
-      oriCkeep = dfrf.oriC[argmax(dfrf.spk_mean)]
-      keep =  df.oriC .== oriCkeep
-    end
-    return DataFrame(to_keep = keep,series=df.series)
+
+function _filter_data(df,p::BestOri)
+  function f_keep(mus,oriC,oriS)
+    # find best ori
+    mus_noS = map(ms-> ismissing(ms[2]) ? ms[1] : -Inf ,zip(mus,oriS))
+    best_ori = oriC[argmax(mus_noS)]
+    return oriC .== best_ori
   end
-  # dffilt = dffilt[dffilt.keep,:]
-  # return semijoin(dfs,dffilt ; on=serselector)
-  return df_to_keep!(dffilt)
+  transform!(groupbyneuron(df),
+    [:spk_mean,:oriC,:oriS] => f_keep => :to_keep)
+  return  df_to_keep!(df)
 end
+
 
 struct HighestContrast <: DataFilter
   c::Float64
 end
 
 
-function _filter_data(dfs,p::HighestContrast)
-    serselector = vcat(neuselector,:series)
-    dffilt = combine(groupby(dfs,serselector),
-        :contrast => ( _c-> (unwrap(_c[1]) > p.c) ) => :to_keep)
-    # dffilt = dffilt[dffilt.keep,:]
-    # return semijoin(dfs,dffilt ; on=serselector)
-    return df_to_keep!(dffilt)
+function _filter_data(df,p::HighestContrast)
+  function f_keep(contr)
+    return unwrap.(contr) .> p.c
+  end
+  transform!(groupbyseries(df),
+    :contrast => f_keep => :to_keep)
+  return  df_to_keep!(df)
+end
+
+function _filter_data_old(dfs,p::HighestContrast)
+  serselector = vcat(neuselector,:series)
+  dffilt = combine(groupby(dfs,serselector),
+      :contrast => ( _c-> (unwrap(_c[1]) > p.c) ) => :keep)
+  dffilt = dffilt[dffilt.keep,:]
+  return semijoin(dfs,dffilt ; on=serselector)
 end
 
 # function filter_data(dfs, p::SurroundSuppression)

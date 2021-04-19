@@ -19,7 +19,7 @@ using Images,OffsetArrays
 using CmdStan,MCMCChains
 
 using Serialization,JSON,MAT# For input and output
-using DataFrames,DataFramesMeta
+using DataFrames,DataFramesMeta,CategoricalArrays
 
 using SmoothingSplines # smoothing PSTH curves
 using HypothesisTests,Bootstrap # confidence intervals and significance
