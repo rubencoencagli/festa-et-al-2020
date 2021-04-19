@@ -5,6 +5,7 @@
 *.png
 *.mat
 *.jls
+*.log
 tmp/
 .directory
 Manifest.toml

@@ -2,7 +2,7 @@
 # Neuronal variability reflects probabilistic inference tuned to natural image statistics
 
 Festa, Aschner, Davila, Kohn and Coen-Cagli  
-DOI:  <https://doi.org/10.1101/2020.06.17.142182>
+Preprint DOI:  <https://doi.org/10.1101/2020.06.17.142182>
 
 This code reproduces the figures from the paper Festa et al., BiorXiv, 2020.
 
@@ -20,10 +20,8 @@ Please note that `cmd-stan` must be compiled after being downloaded. Refer to th
 
 ### Importing the data
 
-> :warning: **TO-DO**
-
-1. :warning: TODO  import the data files from figshare/osf/zenodo :sweat:  . If you wish to use the default paths, simply copy it to the `data` folder in the project directory.
-2. Run `set_dirs.jl` with Julia, add the directory paths when prompted. The directory paths are stored in the file `data/local_dirs.json`. You can also modify that file directly to indicate the data directories, as follows:
+1. :warning: TODO  import the data files from Zenodo. If you wish to use the default paths, simply copy it to the `data` folder in the project directory.
+2. Run `set_dirs.jl` with Julia, indicate the directory paths when prompted. The directory paths are stored in the file `data/local_dirs.json`. You can also modify that file directly to indicate the data directories, as follows:
 ```json
 {
   "dir_exp":"<directory containing experimental data>",
@@ -42,7 +40,7 @@ The scripts that produce each figure are in the folder `scripts/figures/` in sep
 
 Figures are then saved in the `plots` folder, created in the home directory of the project.
 
- Note that training a GSM model may require 15 to 30 minutes (the code is not optimized for speed). Therefore, by default, the trained model is saved on disk, and chached. If you change the GSM parameters and you require a new training you can either:
+ Note that training a GSM model for figures 1D, 2D,3A may require 15 to 30 minutes (the code is not optimized for speed). Therefore, by default, the trained model is saved on disk, and chached. If you change the GSM parameters and you require a new training you can either:
 
 + Remove the chached files, contained in `src/tmp`
 + Call the script with the `--rebuildGSM` option, for example:  
