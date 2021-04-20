@@ -59,7 +59,8 @@ data_spikecounts_series = F. define_series(data_spikecounts;
 
 data_series_filt = F.filter_data(data_spikecounts_series, data_filters...)
 
-data_neus_scatter = F.average_ff_over_series_pvc8_natimg(data_series_filt ; ci=0.68)
+data_neus_scatter = F.average_ff_over_series_pvc8_natimg(data_series_filt ;
+  ci=0.68)
 
 ## scatter plots
 plt = let dat =  data_neus_scatter,

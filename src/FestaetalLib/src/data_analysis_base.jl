@@ -262,7 +262,7 @@ end
 function get_blank_and_window(sd,window_blank,window_stimulus)
   a = get_responses_window(sd,window_stimulus)
   b = get_spontaneus_rates(sd,window_blank)
-  return innerjoin(a,b ; on=intersect(names.([a,b])...))
+  return innerjoin(a,b ; on=intersect(names.([a,b])...),matchmissing=:equal)
 end
 
 
@@ -364,7 +364,8 @@ function get_views_included_sizetuning(resps::DataFrame, views::DataFrame; kthre
         (t -> test_views_included_with_rf(t.spk_mean,
             t.blank_mean,t.blank_var,kthresh,t.size) )   => :to_keep)
     delete!(dffilt, .! dffilt.to_keep)
-    grats_select = semijoin(gratsresps, dffilt; on = serselector)
+    grats_select = semijoin(gratsresps, dffilt;
+            on = serselector,matchmissing=:equal)
     nneuspost = nneus(grats_select)
     @info """ Selection of views for gratings
     Starting with:  $nneuspre neurons
@@ -396,7 +397,7 @@ function define_series(df_spk::DataFrame ; secondary_features = [:natimg,:phase,
           s_idx+=1
           ddf.series .= s_idx
   end end
-  ret =  innerjoin(df_spk, df_goodseries ; on = serselector)
+  ret =  innerjoin(df_spk, df_goodseries ; on = serselector,matchmissing=:equal)
   nneus_final = nneus(ret)
   @info """ Selection of series
   After removing series that include null mean responses
@@ -463,7 +464,7 @@ function average_over_series_rel_old(data_spikecounts_series ; sizesnat = 2,size
     @assert ( (count(is_large) == 1) && (!isnat) ) || isnat
     DataFrame(size =df.size, spk_rate_rel = spk_rate_rel,is_rf=is_rf,is_large=is_large)
   end
-  retboth =innerjoin(ret,retrels ; on =_to_join)
+  retboth =innerjoin(ret,retrels ; on =_to_join,matchmissing=:equal)
   return retboth
 end
 
