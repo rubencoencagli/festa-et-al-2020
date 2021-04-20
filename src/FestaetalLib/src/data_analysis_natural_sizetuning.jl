@@ -80,12 +80,15 @@ end
 
 
 function population_average_sizetuning(dfpop,primary_feature::Symbol=:size)
-  function do_averages(means,ffs)
+  function do_averages(df)
+    means = df.spk_mean
+    ffs = df.spk_ff
     bmeans = mean_boot(means)
     bffs = geomean_boot(ffs)
     return merge(bmeans,bffs)
   end
-  dfret=combine([:spk_mean_rel,:spk_ff]=>do_averages,
-   groupby(dfpop, primary_feature))
-  return sort!(dfret,primary_feature)
+  dfret=combine( do_averages, groupby(dfpop, primary_feature;sort=true))
+      # [:spk_mean_rel,:spk_ff]=>do_averages)
+  # return sort!(dfret,primary_feature)
+  return dfret
 end
