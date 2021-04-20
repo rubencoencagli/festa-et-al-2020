@@ -29,9 +29,11 @@ data_filters =[
         F.NSeriesMin(10)] # the neuron should respond to 10 or more images
 
 ##
+
 # Include only responsive stimuli
 views_included= F.get_views_included(dataspikes ;
   @eponymtuple(kthresh,secondary_features,window_stim,window_blank)...)
+
 
 # compute latencies for each neuron
 data_latency = F.compute_latency(dataspikes,views_included ;

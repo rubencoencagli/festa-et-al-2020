@@ -3,7 +3,7 @@
 
 function  nm(df::DataFrame)
   println( "number of rows : $(nrow(df)) ; number of columns: $(ncol(df))" )
-  [print(String(n)," ","| ") for n in names(df)]; println("\n")
+  [print(n," ","| ") for n in names(df)]; println("\n")
   return nothing
 end
 
@@ -302,7 +302,7 @@ function get_views_included(sd::SpikingData ;
       window_stim = (50E-5,150E-3) , window_blank = (25E-3,75E-3) )
   resps = get_blank_and_window(sd,window_blank,window_stim)
   # size tuning
-  if !(:natimg in names(sd.views)) # if not defined, define it as missing
+  if !("natimg" in names(sd.views)) # if not defined, define it as missing
       sd.views[!,:natimg] .= missing
   end
   viewsgrat = filter(:natimg=>ismissing, sd.views)

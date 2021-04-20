@@ -252,7 +252,7 @@ end
 
 
 function average_over_series_surrori(dat)
-  if !( :ff_rel in names(dat) )
+  if !( "ff_rel" in names(dat) )
     dat = add_relative_ff(dat)
   end
   _to_join = vcat(neuselector,:oriS)

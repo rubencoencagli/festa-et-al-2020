@@ -12,7 +12,7 @@ function make_dfviews_pvc8()
   natimgs = repeat(1:nimg ; inner=2)
   views_nats = DataFrame(view = idx_matnat, idxmat = idx_matnat,
       size=sizes_nat, natimg=natimgs,
-      phase=missing,ori=missing,category=missing,)
+      phase=missing,ori=missing,category=missing)
   # gratings parameters
   idxs = 540 .+ collect(1:224)
   idx_matgrat = collect( (1:224)) .+ (64 + 128 + 2*9*30)
@@ -22,7 +22,8 @@ function make_dfviews_pvc8()
   allpars =collect(Iterators.product(phase,category,sizes_deg,oris))[:]
   pars_get(k::Integer) =getindex.(allpars,k)
   views_grats = DataFrame(view=idxs, idxmat = idx_matgrat,
-      phase = pars_get(1) , category=pars_get(2),size=pars_get(3), ori = pars_get(4),
+      phase = pars_get(1) , category=pars_get(2),size=pars_get(3),
+      ori = pars_get(4),
       natimg=missing)
   return vcat(views_nats, views_grats)
 end
@@ -188,7 +189,7 @@ function _test_latency(neuron_select::DataFrame, sd::SpikingData,included_data)
   @assert all(incl_select.blank_var .== incl_select.blank_var[1] )
   ts = sd.times
   psth_all = get_psth(spk_good.spk,ts)
-  if :size in names(sd.views)
+  if "size" in names(sd.views)
     views_good = @where(sd.views, 0.4 .< :size .< 1.2 )
   else
     views_good = sd.views
@@ -220,7 +221,7 @@ end
 function compute_latency(sd::SpikingData, included_data ;
         min_latency=25E-3 , max_latency=100E-3, k_latency=2.0)
   spk_good = semijoin(sd.spikes, included_data;on = vcat(neuselector,:view))
-  if :size in names(sd.views)
+  if "size" in names(sd.views)
     views_good = @where(sd.views, 0.4 .< :size .< 1.2 ).view
   else
     views_good = sd.views.view
