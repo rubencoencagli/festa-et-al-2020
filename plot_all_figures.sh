@@ -1,6 +1,6 @@
 #!/bin/sh
 # Plots all figures, one by one.
-# warning : it might take about one hour 
+# warning : the runing time is between one and two hours. 
 
 julia paperfigures/1D.jl --rebuildGSM
 julia paperfigures/2C.jl
