@@ -13,15 +13,15 @@ This code reproduces the figures from the paper Festa et al., BiorXiv, 2020.
 
 The code is multi-platform, provided that the follwing two requirements are fulfilled:
 
-+ [Julia 1.4](https://julialang.org/) (or newer)
++ [Julia 1.5](https://julialang.org/) (or newer)
 + [cmd-stan 2.22](https://mc-stan.org/users/interfaces/cmdstan) (or newer)
 
-Please note that `cmd-stan` must be compiled after being downloaded. Refer to the installation instructions on the website.
+Please note that `cmd-stan` must be compiled after being downloaded. Refer to the installation instructions [on the website](https://mc-stan.org/users/interfaces/cmdstan). **Take note of the folder where you copy cmdstan**, it needs to be associated to the  variable `dir_stan_home`, as explained below.
 
-### Importing the data
+### Importing the data, setting the folders
 
-1. :warning: TODO  import the data files from Zenodo. If you wish to use the default paths, simply copy it to the `data` folder in the project directory.
-2. Run `set_dirs.jl` with Julia, indicate the directory paths when prompted. The directory paths are stored in the file `data/local_dirs.json`. You can also modify that file directly to indicate the data directories, as follows:
+1. Import the data file  from Zenodo. If you wish to use the default paths, simply create a folder called data `data` in the project directory (if it does not exist), and copy the contents of `festa-et-al-2021-data.zip` in it.
+2. Run `set_dirs.jl` with Julia, indicate the directory paths when prompted. The directory paths will be stored in the file `data/local_dirs.json`. You can also modify the file directly to indicate the data directories, as follows:
 ```json
 {
   "dir_exp":"<directory containing experimental data>",
@@ -29,6 +29,7 @@ Please note that `cmd-stan` must be compiled after being downloaded. Refer to th
   "dir_stan_home":"<home directory of cmd-stan installation>"
 }
 ```
+Make sure the directories exists. Regarding `dir_stan_home`, remember that Stan must be compiled locally, as specified by the cmdstan installation instructions.
 
 ### Internal dependencies
 
