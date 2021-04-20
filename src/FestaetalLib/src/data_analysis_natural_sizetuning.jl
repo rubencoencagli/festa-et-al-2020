@@ -81,7 +81,7 @@ end
 
 function population_average_sizetuning(dfpop,primary_feature::Symbol=:size)
   function do_averages(df)
-    means = df.spk_mean
+    means = df.spk_mean_rel
     ffs = df.spk_ff
     bmeans = mean_boot(means)
     bffs = geomean_boot(ffs)

@@ -65,6 +65,8 @@ data_series_relsizes=F.relativize_sizes(data_series_filt)
 
 data_neus=F.average_over_series(data_series_relsizes,:size)
 
+@show names(data_neus);
+
 data_pop=F.population_average_sizetuning(data_neus)
 
 plt = let dat=data_pop,
@@ -75,8 +77,9 @@ plt = let dat=data_pop,
   plot!(p, xplot, dat.mean; ribbon=[dat.mean_ddown,dat.mean_dup],
     linewidth=3, marker=:diamond , label="mean spike count (normalized)",
     ylims=(0,1.2), xlims=(0.3,10),  xscale=:log10,
-    color=colorant"OrangeRed")
-  plot!(twinx(), xplot, dat.geomean; ribbon= [dat.geomean_ddown,dat.geomean_dup],
+    color=colorant"DarkGreen")
+  plot!(twinx(p), xplot, dat.geomean;
+    ribbon= [dat.geomean_ddown,dat.geomean_dup],
     linewidth=3, marker=:diamond , label="geomean FF",legend=:topleft,
     color=:blue , ylims = (0.9,1.7) ,xlims=(0.3,10),  xscale=:log10)
 end
