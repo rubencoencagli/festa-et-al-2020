@@ -96,7 +96,8 @@ function plot_single_neuron(df_dat)
     markerstrokewidth=3,
     yerror=(ret.mean_dup,ret.mean_ddown),
     leg=false,xscale=:log10,
-    xlabel="size (relative to RF)" , ylabel="rate (relatitve to RF)")
+    xlabel="stimulus size relative to RF" ,
+    ylabel="normalized avg. spike-count")
   # plot FF
   plot!(twinx(),ret.size,ret.ff ;
     color=colorant"blue",

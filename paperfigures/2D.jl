@@ -135,12 +135,12 @@ const r_alpha = 15.0
 plt = let plt1=plot(
     sizes ./ rf_size, r ; ribbon=(r_dup,r_ddown) , linewidth = 3,
       color=colorant"forestgreen",
-      xlabel = "stim size (relative to RF)",
-      ylabel = "mean normalized spike-count" ,xscale=:log10,
+      xlabel = "stimulus size relative to RF",
+      ylabel = "normalized avg. spike-count" ,xscale=:log10,
       leg=false)
     plt2 = plot( sizes ./ rf_size, ff ; ribbon=(ff_dup,ff_ddown) , linewidth = 3,
       color=colorant"darkblue",
-    xlabel = "stim size (relative to RF)", ylabel = "Fano factor" ,xscale=:log10,
+    xlabel = "stimulus size relative to RF", ylabel = "Fano factor" ,xscale=:log10,
     leg=false)
     plot(plt1,plt2; layout=(1,2),size=(800,500))
 end

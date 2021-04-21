@@ -99,7 +99,7 @@ plt = let _pltlims = (1E-0,1E3)
     opacity=0.5)
  plot!(plt, identity, [_pltlims...], label="Poisson process" , linestyle=:dash,
   color=:black, linewidht=5)
- plot!(plt, xlabel="Mean (a.u)" , ylabel="Variance (a.u.)", title="Mean Vs Variance in GSM response to natural images (main text, D1)",leg=false)
+ plot!(plt, xlabel="Mean (arb.units)" , ylabel="Variance (arb.units)", title="Mean Vs Variance in GSM response to natural images",leg=false)
  end
 
 # save it locally

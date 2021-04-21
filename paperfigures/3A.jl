@@ -135,7 +135,7 @@ plt = let plt1=plot(
     soris, r ; ribbon=(r_dup,r_ddown) , linewidth = 3,
       color=colorant"forestgreen",
       xlabel = "surround orientation",
-      ylabel = "mean normalized spike-count" ,
+      ylabel = "normalized avg. spike-count" ,
       leg=false)
     plt2 = plot( soris, ff ; ribbon=(ff_dup,ff_ddown) , linewidth = 3,
       color=colorant"darkblue",
