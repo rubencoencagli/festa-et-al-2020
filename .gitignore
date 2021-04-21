@@ -10,3 +10,4 @@ tmp/
 .directory
 Manifest.toml
 data/experiments
+data/natural_images
