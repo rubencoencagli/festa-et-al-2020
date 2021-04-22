@@ -26,7 +26,7 @@ Please note that `cmd-stan` must be compiled after being downloaded. Refer to th
 
 ### Importing the data, setting the folders
 
-1. Import the zipped data from Zenodo, using the following link:   
+1. Import the data from Zenodo, using the following link:   
   https://doi.org/10.5281/zenodo.4710066  
  If you wish to use the default paths, simply create a folder called data `data` in the project directory (if it does not exist), and copy the contents of `festa-et-al-2021-data.zip` in it.
 2. Run `set_dirs.jl` with Julia, indicate the directory paths when prompted. The directory paths will be stored in the file `data/local_dirs.json`. You can also modify the file directly to indicate the data directories, as follows:
