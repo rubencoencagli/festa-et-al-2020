@@ -9,8 +9,9 @@ This code reproduces the figures from the paper:
 >Festa D, Aschner A, Davila D, Kohn A, Coen-Cagli R   
 **Neuronal variability reflects probabilistic inference tuned to natural image statistics**
 
+**BiorXiv preprint** (2020) [![DOI:10.1101/2020.06.17.142182](http://img.shields.io/badge/DOI-10.1101/2020.06.17.142182-B31B1B.svg)](https://doi.org/10.1101/2020.06.17.142182)
 
-[Preprint on BiorXiv](https://doi.org/10.1101/2020.06.17.142182)
+**Experimental Data**  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4710066.svg)](https://doi.org/10.5281/zenodo.4710066)
 
 ## Installation instructions
 
@@ -25,7 +26,9 @@ Please note that `cmd-stan` must be compiled after being downloaded. Refer to th
 
 ### Importing the data, setting the folders
 
-1. Import the data file  from Zenodo. If you wish to use the default paths, simply create a folder called data `data` in the project directory (if it does not exist), and copy the contents of `festa-et-al-2021-data.zip` in it.
+1. Import the zipped data from Zenodo, using the following link:   
+  https://doi.org/10.5281/zenodo.4710066  
+ If you wish to use the default paths, simply create a folder called data `data` in the project directory (if it does not exist), and copy the contents of `festa-et-al-2021-data.zip` in it.
 2. Run `set_dirs.jl` with Julia, indicate the directory paths when prompted. The directory paths will be stored in the file `data/local_dirs.json`. You can also modify the file directly to indicate the data directories, as follows:
 ```json
 {
@@ -56,6 +59,12 @@ Figures are then saved in the `plots` folder, created in the home directory of t
 
 To inspect the code and modify its parameters it is reccomended to open the scripts using [Juno](https://junolab.org/), the official IDE for Julia.
 
+## Bugs and issues
+
+In case of unexpected errors or problems, please submit an issue using the GitHub interface. Note that the code can only be tested and mantained on Linux platforms with the required versions of Julia and cmd-stan.
+
+
+Code curated by  <a href="https://orcid.org/0000-0003-3803-1542">Dylan Festa <img alt="ORCID logo" src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png" width="16" height="16" /></a>
 
 -----
 
