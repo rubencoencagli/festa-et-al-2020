@@ -9,7 +9,7 @@ This code reproduces the figures from the paper:
 >Festa D, Aschner A, Davila D, Kohn A, Coen-Cagli R   
 **Neuronal variability reflects probabilistic inference tuned to natural image statistics**
 
-**BiorXiv preprint** (2020) [![DOI:10.1101/2020.06.17.142182](http://img.shields.io/badge/DOI-10.1101/2020.06.17.142182-B31B1B.svg)](https://doi.org/10.1101/2020.06.17.142182)
+**BiorXiv preprint** [![DOI:10.1101/2020.06.17.142182](http://img.shields.io/badge/DOI-10.1101/2020.06.17.142182-B31B1B.svg)](https://doi.org/10.1101/2020.06.17.142182)
 
 **Experimental Data**  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4710066.svg)](https://doi.org/10.5281/zenodo.4710066)
 
