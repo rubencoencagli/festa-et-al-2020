@@ -1,11 +1,16 @@
 
 # Neuronal variability reflects probabilistic inference tuned to natural image statistics
 
-Dylan Festa, Amir Aschner, Aida Davila, Adam Kohn and Ruben Coen-Cagli  
-Preprint DOI:  <https://doi.org/10.1101/2020.06.17.142182>
 
-This code reproduces the figures from the paper Festa et al., BiorXiv, 2020.
+[![DOI](https://zenodo.org/badge/285367791.svg)](https://zenodo.org/badge/latestdoi/285367791)
 
+
+This code reproduces the figures from the paper:
+>Festa D, Aschner A, Davila D, Kohn A, Coen-Cagli R   
+**Neuronal variability reflects probabilistic inference tuned to natural image statistics**
+
+
+[Preprint on BiorXiv](https://doi.org/10.1101/2020.06.17.142182)
 
 ## Installation instructions
 
