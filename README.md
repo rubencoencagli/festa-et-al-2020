@@ -1,9 +1,7 @@
 
 # Neuronal variability reflects probabilistic inference tuned to natural image statistics
 
-
 [![DOI](https://zenodo.org/badge/285367791.svg)](https://zenodo.org/badge/latestdoi/285367791)
-
 
 This code reproduces the figures from the paper:
 >Festa D, Aschner A, Davila D, Kohn A, Coen-Cagli R   
@@ -41,7 +39,7 @@ Make sure the directories exists. Regarding `dir_stan_home`, remember that Stan 
 
 ### Internal dependencies
 
-To load the code libraries and all package dependency, run   the script `install_dependencies.jl` from the home folder of the project.
+To load the code libraries and all package dependencies, run the script `install_dependencies.jl` from the home folder of the project.
 
 ## Producing the figures
 
@@ -49,19 +47,19 @@ The scripts that produce each figure are in the folder `scripts/figures/` in sep
 
 Figures are then saved in the `plots` folder, created in the home directory of the project.
 
- Note that training a GSM model for figures 1D, 2D,3A may require 15 to 30 minutes (the code is not optimized for speed). Therefore, by default, the trained model is saved on disk, and chached. If you change the GSM parameters and you require a new training you can either:
+ Note that training a GSM model for figures 1D, 2D,3A may require 15 to 30 minutes (the code is not optimized for speed). Therefore, by default, the trained model is saved on disk, and cached. If you change the GSM parameters and you require a new training you can either:
 
-+ Remove the chached files, contained in `src/tmp`
++ Remove the cached files, contained in `src/tmp`
 + Call the script with the `--rebuildGSM` option, for example:  
    `julia paperfigures/3A.jl --rebuildGSM` .
 
 ## Inspecting the code
 
-To inspect the code and modify its parameters it is reccomended to open the scripts using [Juno](https://junolab.org/), the official IDE for Julia.
+To inspect the code and modify its parameters it is recommended using [Juno](https://junolab.org/), the official IDE for Julia.
 
 ## Bugs and issues
 
-In case of unexpected errors or problems, please submit an issue using the GitHub interface. Note that the code can only be tested and mantained on Linux platforms with the required versions of Julia and cmd-stan.
+In case of unexpected errors or problems, please submit an issue using the GitHub interface. Note that the code can only be tested and maintained on Linux platforms with the required versions of Julia and cmd-stan.
 
 
 Code curated by  <a href="https://orcid.org/0000-0003-3803-1542">Dylan Festa <img alt="ORCID logo" src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png" width="16" height="16" /></a>
