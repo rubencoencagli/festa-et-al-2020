@@ -104,12 +104,9 @@ end
 # reads and stores a large set natural images from the specified folder
 function read_natural_images(size_patch)
   dir_natural_images = read_dirfile()["dir_img"]
-  @assert isdir(dir_natural_images) "$dir_natural_images not found!"
   @info "reading and processing natural images for training..."
-  img_test = Images.load(get_file_paths(dir_natural_images,".jpg")[1])
-  img_size= minimum(size(img_test)) - 5
-  images_train = read_natural_images(dir_natural_images,img_size,
-        StandardRegu() ; verbose=false)
+  # defined in naturalRead.jl
+  images_train = read_natural_images_train(dir_natural_images)
   @info "Now reading and processing images used in experiments"
   file_images_exp = joinpath(dir_natural_images,"experiment_images.mat")
   images_exp =  read_test_images_natural_areasumm(file_images_exp,size_patch)
@@ -121,7 +118,6 @@ end
 function make_filter_bank(pars)
   return OnePyrBank(pars.scale,pars.distance,pars.nsurround ; ncent=pars.ncenter)
 end
-
 
 # source code also in steerPyramids.jl
 function show_filter_bank(pars,framesize)
@@ -145,7 +141,7 @@ function  compute_filter_outputs(bank, nat_imgs, size_patch , nsampl)
   up to 15-20 minutes.
   """
   natpatches = sampling_tiles(nsampl, nat_imgs, size_patch)
-  ret = apply_bank( natpatches, bank, Xstd(2.0),false)
+  ret = apply_bank(natpatches, bank, Xstd(2.0),false)
   println("Outputs computed!")
   return ret
 end

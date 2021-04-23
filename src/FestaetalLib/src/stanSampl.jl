@@ -3,7 +3,6 @@ Here I use Stan to find the posterior of the
 GSM given data, code adapted from Abhi
 =#
 
-
 global stan_folder = ""
 
 function set_stan_folder(folder)
@@ -11,8 +10,6 @@ function set_stan_folder(folder)
   global stan_folder=folder
   set_cmdstan_home!(folder)
 end
-
-
 
 # N are the number of filters*2 , i.e. the filter output dimension
 # M are the datapoints (image patches)
@@ -35,9 +32,9 @@ const stan_GSM = """
   }
   model {
     v ~ rayleigh(ray_alpha);
-     for (j in 1:M){
-         g[:,j] ~ multi_normal(Mean,Gcov);
-         X[:,j] ~ multi_normal(v[j]*g[:,j],Ncov);
+    for (j in 1:M){
+       g[:,j] ~ multi_normal(Mean,Gcov);
+       X[:,j] ~ multi_normal(v[j]*g[:,j],Ncov);
      }
   }
 """
@@ -199,7 +196,7 @@ function sample_posterior(gsm::GSM{RayleighMixer},X, n_samples ;
 end
 
 """
-    function sample_posterior_fast(gsm::GSM{RayleighMixer},X::Matrix, n_samples ;
+    function sample_posterior_fast(gsm::GSM{RayleighMixer},X::Matrix, n_samples;
                     thin_val=2,
                     pdir=joinpath(@__DIR__(),"../other/StanTmp"),
                     nchains=4,
@@ -215,7 +212,9 @@ Produces samples from the posterior distribution ``P(g|x)`` using Stan
   - `nchains` : number of parallel chains, the number of samples is
         n_sampl*n_chains
 # Outputs
- The output is a Tuple with fields gs, vs. The dimensions of gs are dim_input x n_points x n_samples . vs are n_points x n_samples
+ The output is a Tuple with fields gs, vs.
+ The dimensions of gs are dim_input x n_points x n_samples .
+ vs are n_points x n_samples
 """
 function sample_posterior_fast(gsm::GSM{RayleighMixer},X, n_samples ;
             thin_val=2,

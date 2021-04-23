@@ -95,7 +95,7 @@ if rotate is true, each image is repeated 4 times for each roation
 function read_natural_images(dir,sz, (img_regu::ReguType) = StandardRegu() ;
         (rotate::Bool)=true,(verbose::Bool)=true,
         (extension::String)=".jpg")::Vector{Matrix{Float64}}
-    @assert isdir(dir) "directory $dir not valid"
+    @assert isdir(dir) "directory $dir not found"
     check_size(img,sz) = min(size(img)...) >= sz
     img_files=get_file_paths(dir,extension)
     @assert !isempty(img_files) "no images found in directory $dir"
@@ -117,6 +117,17 @@ function read_natural_images(dir,sz, (img_regu::ReguType) = StandardRegu() ;
     end
     return ret
 end
+
+function read_natural_images_train(dir_natural_images)
+  # size of image (better if larger)
+  img_test = load(get_file_paths(dir_natural_images,".jpg")[1])
+  img_size= minimum(size(img_test)) - 5
+  all_images =  G.read_natural_images(dir_natural_images,img_size,
+   G.StandardRegu() ; verbose=false)
+  @info "natural images read!"
+  return all_images
+end
+
 
 """
     function sampling_coords(n_samples::Integer, images::Vector{Matrix{Float64}},
@@ -193,6 +204,7 @@ function sampling_tiles(n_samples::Integer, images::Vector{Matrix{Float64}},
   out
 end
 
+# shifts and scales values, so that they are between 0 and 1
 function regularize01!(mat)
     l,u = extrema(mat)
     @. mat = (mat-l)/(u-l)
