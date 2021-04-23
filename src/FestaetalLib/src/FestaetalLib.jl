@@ -108,8 +108,8 @@ function read_natural_images(size_patch)
   @info "reading and processing natural images for training..."
   img_test = Images.load(get_file_paths(dir_natural_images,".jpg")[1])
   img_size= minimum(size(img_test)) - 5
-  images_train = read_natural_images(dir_natural_images,size_patch,StandardRegu() ;
-    verbose=false)
+  images_train = read_natural_images(dir_natural_images,img_size,
+        StandardRegu() ; verbose=false)
   @info "Now reading and processing images used in experiments"
   file_images_exp = joinpath(dir_natural_images,"experiment_images.mat")
   images_exp =  read_test_images_natural_areasumm(file_images_exp,size_patch)

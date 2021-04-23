@@ -14,6 +14,10 @@ buildGSM = F.check_rebuild(ARGS) || isnothing(path_gsm_file)
 
 ## Build or read the GSM model
 
+nat_img,exp_img=F.read_natural_images(160)
+
+
+##
 if buildGSM
   @info "The GSM model will be initialized and trained, this might take some time"
 
@@ -47,14 +51,16 @@ if buildGSM
 
    # apply the filter bank to natural images, to get the output vector
    const nsampl = 10_000 #10_000 # how many samples to train on ? (suggested: 10_000 )
-   x_values = F.compute_filter_outputs(filter_bank, nat_image_patches, size_patch , nsampl)
+   x_values = F.compute_filter_outputs(filter_bank, nat_image_patches,
+        size_patch , nsampl)
 
    #  noise scaling such that the trace of the covariance of the noise is
    #  noise_scale_factor * trace of covariange of the g
    const noise_scale_factor = 0.1
 
    # use the outputs on natural statistics to train the GSM
-   gsm = F.train_gsm_model(x_values,filter_bank,size_patch,noise_scale_factor,nsampl)
+   gsm = F.train_gsm_model(x_values,filter_bank,
+      size_patch,noise_scale_factor,nsampl)
 
    # this is an object that stores internally GMS model, filter bank stimuli  and samples (initialized as empty)
    gsm_obj = F.build_gsm_object(gsm,noise_scale_factor,
@@ -77,12 +83,13 @@ const n_input_patches = 500
 natural_images_patches = F.cut_natural_patches(nat_images,n_input_patches,size_patch)
 
 # you can visualize examples here. This plot will not be saved
-showbw(natural_images_patches[10] , "stimulus example")
+showbw(natural_images_patches[14] , "stimulus example")
 
 ## Sample
 
 # perform Hamiltonian MC sampling
-const nsamples = 30 # by default there are 4 chains working in parallel so the total is x4
+# by default there are 4 chains working in parallel so the total is x4
+const nsamples = 100 
 F.sample_posterior_imgs!(gsm_obj,nsamples,natural_images_patches)
 
 
@@ -108,3 +115,6 @@ figname = date2str()*"_main_1D.png"
 fignamefull = joinpath(F.dir_plots,figname)
 savefig(plt,fignamefull)
 @info "Figure saved as $(fignamefull) . All done!"
+
+
+##

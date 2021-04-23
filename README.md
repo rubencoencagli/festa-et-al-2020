@@ -41,11 +41,11 @@ Make sure the directories exists. Regarding `dir_stan_home`, remember that Stan 
 
 To load the code libraries and all package dependencies, run the script `install_dependencies.jl` from the home folder of the project.
 
-## Producing the figures
+## Generating figures
 
-The scripts that produce each figure are in the folder `scripts/figures/` in separate files. The name of the file refers to the corresponding figure in the paper.
+The scripts that generate each figure are in the folder `scripts/figures/`. The name of each file refers to the corresponding figure in the paper.
 
-Figures are then saved in the `plots` folder, created in the home directory of the project.
+The scripts automatically save the figures in the `plots` folder, which is created in the home directory of the project.
 
  Note that training a GSM model for figures 1D, 2D,3A may require 15 to 30 minutes (the code is not optimized for speed). Therefore, by default, the trained model is saved on disk, and cached. If you change the GSM parameters and you require a new training you can either:
 
