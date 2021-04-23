@@ -122,8 +122,8 @@ function read_natural_images_train(dir_natural_images)
   # size of image (better if larger)
   img_test = load(get_file_paths(dir_natural_images,".jpg")[1])
   img_size= minimum(size(img_test)) - 5
-  all_images =  G.read_natural_images(dir_natural_images,img_size,
-   G.StandardRegu() ; verbose=false)
+  all_images =  read_natural_images(dir_natural_images,img_size,
+    StandardRegu() ; verbose=false)
   @info "natural images read!"
   return all_images
 end
