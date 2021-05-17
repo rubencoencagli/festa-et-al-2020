@@ -115,7 +115,7 @@ ff_hist =  let dat = keyvals_neus, nbins=15,
   F.print_mean_and_pval(dscore," perp Vs large")
   bins = range(-70,70;length=nbins)
   h1 = fit(Histogram,dscore,bins)
-  plot(h1 ; leg=false , title = "Cadet and Monyet, N = $nneus neurons")
+  plot(h1 ; leg=false , title = "Two awake monkeys, $nneus neurons")
   h2 = fit(Histogram,dscore[dat.ff_diff_pelg_issigni],bins)
   plot!(h2 ; leg=false, xlabel="FF orthogonal - matched %")
 end
@@ -127,7 +127,7 @@ spk_hist = let dat = keyvals_neus, nbins=15,
   F.print_mean_and_pval(dscore," perp Vs large")
   bins = range(-70,70;length=nbins)
   h1 = fit(Histogram,dscore,bins)
-  plot(h1 ; leg=false , title = "Cadet and Monyet, N = $nneus neurons")
+  plot(h1 ; leg=false , title = "Two awake monkeys, $nneus neurons")
   h2 = fit(Histogram,dscore[dat.rate_diff_pelg_issigni],bins)
   plot!(h2 ; leg=false, xlabel="spike count orthogonal - matched %" )
 end
