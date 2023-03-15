@@ -63,7 +63,8 @@ function SpikingData_pvc8()
     return dfout
   end
   datadf = vcat(datadfs...)
-  categorical!(datadf,:session;compress=true)
+  transform!(datadf, :session => categorical => :session)
+  # categorical!(datadf,:session;compress=true)
   datadf[!,:electrode] .= UInt8(1)
   # category is missing or 1 , not 2. Remove unnecessary views
   filter!(:category => (c -> ismissing(c) || c != 2 ),  views)
