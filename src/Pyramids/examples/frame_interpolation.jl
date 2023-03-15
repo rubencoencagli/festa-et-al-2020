@@ -9,7 +9,7 @@ using ColorTypes
 using Pyramids
 using Interpolations
 
-type PhasePyramid <: PyramidType
+struct PhasePyramid <: PyramidType
 end
 
 function shift_correction(phi_delta::ImagePyramid; shift_limit=0.5)
